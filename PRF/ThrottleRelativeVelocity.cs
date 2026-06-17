@@ -12,7 +12,7 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
 
     public ThrottleRelativeVelocity(ConfigFile config) : base(config)
     {
-        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 0.05f, "Sensitivity of the throttle input. represents the maximum fraction of the axis that can be done per frame at max input.");
+        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f, "Sensitivity of the throttle input. represents the maximum fraction of the axis that can be done per frame at max input.");
 
     }
     
@@ -26,7 +26,7 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
         if (PlayerSettings.throttleUseRelative)
         {
             // CHANGES HERE
-            throttleInput = Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value,-1, 1);
+            throttleInput = Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime,-1, 1);
             prevThrottleInput = __instance.simulatedThrottle;
             // End of changes
         }
