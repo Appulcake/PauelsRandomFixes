@@ -12,7 +12,7 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
 
     public ThrottleRelativeVelocity(ConfigFile config) : base(config)
     {
-        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f, "Sensitivity of the throttle input. represents the maximum fraction of the axis that can be done per frame at max input.");
+        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f, "Sensitivity of the relative throttle input.");
 
     }
     
