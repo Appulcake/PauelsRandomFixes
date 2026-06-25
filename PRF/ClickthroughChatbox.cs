@@ -6,24 +6,19 @@ using System;
 namespace PRF;
 
 [Fix]
-[HarmonyPatch(typeof(MessageUI), "Awake")]
+[HarmonyPatch(typeof(MessageUI))]
 internal class ClickthroughChatbox(ConfigFile config): ConfigurableFix(config)
 {
-    static void Postfix(MessageUI __instance)
+    [HarmonyPatch(nameof(MessageUI.Awake))]
+    [HarmonyPostfix]
+    private static void Postfix(MessageUI __instance)
     {
-        try
-        {
-            __instance.messageText.raycastTarget = false;
-            __instance.killFeedText.raycastTarget = false;
+        __instance.messageText.raycastTarget = false;
+        __instance.killFeedText.raycastTarget = false;
 
-            var image = __instance.messageBackground.GetComponent<Image>();
+        var image = __instance.messageBackground.GetComponent<Image>();
 
-            if (image != null)
-                image.raycastTarget = false;
-        }
-        catch (Exception ex)
-        {
-            PRF.Logger.LogError(ex);
-        }
+        if (image != null)
+            image.raycastTarget = false;
     }
 }
