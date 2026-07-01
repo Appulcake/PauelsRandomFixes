@@ -12,7 +12,7 @@ internal class RestrictedWeaponsAISpawnFix(ConfigFile config): ConfigurableFix(c
     [HarmonyPatch(typeof(WeaponChecker), nameof(WeaponChecker.GetAvailableWeaponsNonAlloc))]
     [HarmonyPostfix]
     public static void FixEmptyOutput(Player player, HardpointSet hardpointSet, Airbase airbase, FactionHQ hq,
-        bool allowEmpty, ref List<WeaponMount> outAvailable)
+        bool allowEmpty, ref List<WeaponMount?> outAvailable)
     {
         if (allowEmpty || outAvailable.Count != 0) return;
         outAvailable.Add(null);
