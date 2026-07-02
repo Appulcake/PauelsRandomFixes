@@ -6,14 +6,19 @@ namespace PRF;
 
 internal abstract class ConfigurableFix: HarmonyPatch
 {
-    private ConfigEntry<bool> _enabled;
+    private readonly ConfigEntry<bool> _enabled;
     private Harmony? Harmony { get; set; }
     private bool IsPatched { get; set; }
-    
+
+    protected virtual bool DefaultEnabled => true;
+
+    protected virtual string Description => $"if true, {GetType().Name} is enabled";
+
     protected ConfigurableFix(ConfigFile config)
     {
         var type = GetType().Name;
-        _enabled = config.Bind("FIXES", type, true, $"if true, {type} is enabled.");
+        // ReSharper disable twice VirtualMemberCallInConstructor
+        _enabled = config.Bind("FIXES", type, DefaultEnabled, Description);
         Harmony ??= new Harmony($"{PluginInfo.PLUGIN_GUID}.{type}");
         _enabled.SettingChanged += OnEnabledChanged;
         if (_enabled.Value)
