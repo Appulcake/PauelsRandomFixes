@@ -102,7 +102,6 @@ internal class AbsoluteZoom : ConfigurableFix
     [HarmonyPostfix]
     public static void AbsoluteZoomInOrbit(CameraOrbitState __instance, ref CameraStateManager cam)
     {
-        PRF.Logger.LogDebug($"{__instance.viewDistAdjust}:{__instance.zoomSpeed}");
         if (!_useAbsolute.Value) return;
         var input = GameManager.playerInput.GetAxis("Zoom View");
         if (_useNegative.Value) input = (input + 1) / 2;
