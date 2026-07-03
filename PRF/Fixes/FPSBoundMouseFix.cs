@@ -14,6 +14,7 @@ namespace PRF.Fixes;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal class FPSBoundMouseFix : ConfigurableFix
 {
+    private static ConfigEntry<bool> _enableCenteringDuringFreelook = null!;
     private static ConfigEntry<float> _cockpitFreelookSensitivity = null!;
     private static ConfigEntry<float> _mapPanSensitivity = null!;
     private static ConfigEntry<float> _orbitCamSensitivity = null!;
@@ -32,21 +33,24 @@ internal class FPSBoundMouseFix : ConfigurableFix
 
     public FPSBoundMouseFix(ConfigFile config) : base(config)
     {
-        _cockpitFreelookSensitivity = config.Bind(GetType().Name, "Cockpit Freelook Sensitivity", 1f,
+        _enableCenteringDuringFreelook = config.Bind(GetType().Name + " - Misc", "Enable Centering VJ During Freelook", false,
+            "Enable centering force to act on Virtual Joystick while freelook is active (instead of freezing last input)");
+        
+        _cockpitFreelookSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Cockpit Freelook Sensitivity", 1f,
             "Cockpit freelook sensitivity");
-        _mapPanSensitivity = config.Bind(GetType().Name, "Map Panning Sensitivity", 1f,
+        _mapPanSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Map Panning Sensitivity", 1f,
             "Map panning sensitivity");
-        _orbitCamSensitivity = config.Bind(GetType().Name, "Orbit Cam Sensitivity", 1f,
+        _orbitCamSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Orbit Cam Sensitivity", 1f,
             "Orbit cam sensitivity");
-        _orbitZoomSensitivity = config.Bind(GetType().Name, "Orbit Cam Zoom Sensitivity", 1f,
+        _orbitZoomSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Orbit Cam Zoom Sensitivity", 1f,
             "Orbit cam zoom sensitivity");
-        _TVCamSensitivity = config.Bind(GetType().Name, "TV (Flyby) Cam Sensitivity", 1f,
+        _TVCamSensitivity = config.Bind(GetType().Name + " - Sensitivity", "TV (Flyby) Cam Sensitivity", 1f,
             "TV (Flyby) cam sensitivity");
-        _virtualJoystickCenteringForce = config.Bind(GetType().Name, "Virtual Joystick Centering Sensitivity", 1f,
+        _virtualJoystickCenteringForce = config.Bind(GetType().Name + " - Sensitivity", "Virtual Joystick Centering Sensitivity", 1f,
             "Virtual joystick centering force sensitivity - stacks with vanilla setting, here to give extra control");
-        _virtualJoystickSensitivityX = config.Bind(GetType().Name, "Virtual Joystick X-Sensitivity", 1f,
+        _virtualJoystickSensitivityX = config.Bind(GetType().Name + " - Sensitivity", "Virtual Joystick X-Sensitivity", 1f,
             "Virtual joystick X-sensitivity - stacks with vanilla setting, here to give extra control");
-        _virtualJoystickSensitivityY = config.Bind(GetType().Name, "Virtual Joystick Y-Sensitivity", 1f,
+        _virtualJoystickSensitivityY = config.Bind(GetType().Name + " - Sensitivity", "Virtual Joystick Y-Sensitivity", 1f,
             "Virtual joystick Y-sensitivity - stacks with vanilla setting, here to give extra control");
     }
 
@@ -416,12 +420,13 @@ internal class FPSBoundMouseFix : ConfigurableFix
                 a = Vector3.ClampMagnitude(_globalJoystickPos + (float) ((double) PlayerSettings.virtualJoystickSensitivity)
                     * new Vector3(pan, tilt, 0.0f), 150f);
             }
-
             // this _globalJoystickPos gets used in PlayerAxisControls ran in FixedUpdateState to for SetVirtualJoystick
             // The static 2f virtualJoystickCentering multiplier is replaced by GetVirtualJoystickCenteringForce which is _virtualJoystickCenteringForce * 4
             _globalJoystickPos = Vector3.Lerp(a, Vector3.zero, PlayerSettings.virtualJoystickCentering * GetVirtualJoystickCenteringForce() * Time.deltaTime);
-        }
-        
+        } else if (_enableCenteringDuringFreelook.Value && PlayerSettings.virtualJoystickEnabled)
+            _globalJoystickPos = Vector3.Lerp(_globalJoystickPos, Vector3.zero,
+                PlayerSettings.virtualJoystickCentering * GetVirtualJoystickCenteringForce() * Time.deltaTime);
+
         return false;
     }
     
@@ -457,20 +462,20 @@ internal class FPSBoundMouseFix : ConfigurableFix
                     SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.SetActive(true);
                 if (!__instance.player.GetButton("Free Look"))
                 {
-                    // Moved to UpdateState
+                    // Moved to UpdateState, original code:
                     /*
                     Vector3 a = SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition;
                     if (CameraStateManager.cameraMode == CameraMode.cockpit)
                     {
-                      //  a = Vector3.ClampMagnitude(a + (float) ((double) PlayerSettings.virtualJoystickSensitivity * (double) Mathf.Min(Time.unscaledDeltaTime, 0.1f) * 30.0) * new Vector3(GameManager.playerInput.GetAxis("Pan View"), -num * GameManager.playerInput.GetAxis("Tilt View"), 0.0f), 150f);
-                      a = GlobalJoystickPos;
-                      PRF.Logger.LogInfo("PlayerAxisControls updating a vector from UpdateVector inside FixedUpdate to " + a);
+                      a = Vector3.ClampMagnitude(a + (float) ((double) PlayerSettings.virtualJoystickSensitivity * (double) Mathf.Min(Time.unscaledDeltaTime, 0.1f) * 30.0) * new Vector3(GameManager.playerInput.GetAxis("Pan View"), -num * GameManager.playerInput.GetAxis("Tilt View"), 0.0f), 150f);
                     }
-                    // Vector3 joystickPos = Vector3.Lerp(a, Vector3.zero, PlayerSettings.virtualJoystickCentering * 2f * Time.deltaTime);
+                    Vector3 joystickPos = Vector3.Lerp(a, Vector3.zero, PlayerSettings.virtualJoystickCentering * 2f * Time.deltaTime);
                     */
+                    
                     // Getting _globalJoystickPos from UpdateState instead of joystickPos from this FixedUpdateState (which'd add another layer of deltaTime based on physics FPS)
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
-                }
+                } else if (_enableCenteringDuringFreelook.Value) // Enable centering to continue happen during freelook with config enabled
+                    SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
                 if (!DynamicMap.mapMaximized && !RadialMenuMain.IsInUse() && !Leaderboard.IsOpen())
                 {
                     __instance.pitchInput = (float) (-(double) SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.y / 150.0);
