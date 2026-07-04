@@ -15,6 +15,8 @@ internal class AbsoluteZoom : ConfigurableFix
     private static ConfigEntry<float> _tvSensitivity = null!;
     private static ConfigEntry<bool> _useAbsolute = null!;
     private static ConfigEntry<bool> _useNegative = null!;
+    
+    protected override bool DefaultEnabled => false;
 
     public AbsoluteZoom(ConfigFile config) : base(config)
     {

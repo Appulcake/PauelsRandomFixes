@@ -16,8 +16,8 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
 
     }
     
-    [HarmonyPrefix]
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerThrottleAxis1Controls))]
+    [HarmonyPrefix]
     public static bool ThrottleAxis1ControlsReplacer(PilotPlayerState __instance)
     {
         var throttleInput = Mathf.Clamp(__instance.player.GetAxisRaw("Throttle"), -1f, 1f);
