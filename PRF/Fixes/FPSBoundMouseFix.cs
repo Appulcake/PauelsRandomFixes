@@ -395,17 +395,15 @@ internal class FPSBoundMouseFix : ConfigurableFix
     }
 
     private static Vector3 _globalJoystickPos; // Bridge vector to transfer info from UpdateState to FixedUpdateState
-
+    
     // Moved function setting virtual joystick's joystickPos value to UpdateState to not double up deltaTime from running it in FixedUpdateState
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.UpdateState))]
-    [HarmonyPrefix]
-    public static bool UpdateStateReplace(Pilot pilot, ref PilotPlayerState __instance)
+    [HarmonyPostfix]
+    public static void UpdateStateAddition(Pilot pilot, ref PilotPlayerState __instance)
     {
-        if (!((UnityEngine.Object) pilot.aircraft != (UnityEngine.Object) null))
-            return false;
-        __instance.PlayerControls();
-
-        if (PlayerSettings.virtualJoystickEnabled && !__instance.player.GetButton("Free Look"))
+        if (!PlayerSettings.virtualJoystickEnabled) return;
+        
+        if (!__instance.player.GetButton("Free Look"))
         {
             float num = PlayerSettings.virtualJoystickInvertPitch ? -1f : 1f;
             Vector3 a = SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition;
@@ -423,12 +421,11 @@ internal class FPSBoundMouseFix : ConfigurableFix
             // this _globalJoystickPos gets used in PlayerAxisControls ran in FixedUpdateState to for SetVirtualJoystick
             // The static 2f virtualJoystickCentering multiplier is replaced by GetVirtualJoystickCenteringForce which is _virtualJoystickCenteringForce * 4
             _globalJoystickPos = Vector3.Lerp(a, Vector3.zero, PlayerSettings.virtualJoystickCentering * GetVirtualJoystickCenteringForce() * Time.deltaTime);
-        } else if (_enableCenteringDuringFreelook.Value && PlayerSettings.virtualJoystickEnabled)
+        } else if (_enableCenteringDuringFreelook.Value)
             _globalJoystickPos = Vector3.Lerp(_globalJoystickPos, Vector3.zero,
                 PlayerSettings.virtualJoystickCentering * GetVirtualJoystickCenteringForce() * Time.deltaTime);
-
-        return false;
     }
+    
     
     // PlayerAxisControls no longer sets its joystickPos and instead gets that data via _globalJoystickPos from UpdateState
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerAxisControls))]
@@ -439,7 +436,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
             return false;
         // Moved to UpdateState
         // float num = PlayerSettings.virtualJoystickInvertPitch ? -1f : 1f;
-        if ((!PlayerSettings.virtualJoystickEnabled ? 0 : (DynamicMap.mapMaximized ? 1 : (RadialMenuMain.IsInUse() ? 1 : 0))) != 0)
+        if (PlayerSettings.virtualJoystickEnabled && (DynamicMap.mapMaximized || RadialMenuMain.IsInUse()))
         {
             __instance.controlInputs.pitch = Mathf.Clamp(__instance.pitchInput, -1f, 1f);
             __instance.controlInputs.roll = Mathf.Clamp(__instance.rollInput, -1f, 1f);
@@ -472,7 +469,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
                     Vector3 joystickPos = Vector3.Lerp(a, Vector3.zero, PlayerSettings.virtualJoystickCentering * 2f * Time.deltaTime);
                     */
                     
-                    // Getting _globalJoystickPos from UpdateState instead of joystickPos from this FixedUpdateState (which'd add another layer of deltaTime based on physics FPS)
+                    // Getting _globalJoystickPos from UpdateState instead of joystickPos from this FixedUpdateState
+                    // (which'd add another layer of deltaTime based on physics FPS)
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
                 } else if (_enableCenteringDuringFreelook.Value) // Enable centering to continue happen during freelook with config enabled
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
