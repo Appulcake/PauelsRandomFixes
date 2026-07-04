@@ -428,8 +428,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     
     
     // PlayerAxisControls no longer sets its joystickPos and instead gets that data via _globalJoystickPos from UpdateState
-    [HarmonyPrefix]
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerAxisControls))]
+    [HarmonyPrefix]
     public static bool PlayerAxisControlsReplace(ref PilotPlayerState __instance)
     {
         if (__instance.pilot.aircraft.cockpit.IsDetached())
