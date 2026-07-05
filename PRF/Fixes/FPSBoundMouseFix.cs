@@ -27,7 +27,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
     protected override bool DefaultEnabled => false;
 
     protected override string Description =>
-        $"if true, {GetType().Name} is enabled\nFixes mouse virtual joystick and freelook sensitivities being dependent"
+        $"{base.Description}\nFixes mouse virtual joystick and freelook sensitivities being dependent"
         + " on FPS. Since the game uses GetAxis for both mouse and controller axes, with this enabled behaviour will"
         + " be flipped for freelook with controllers, and their sensitivity will be FPS dependent.";
 

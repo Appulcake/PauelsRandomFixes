@@ -10,7 +10,7 @@ namespace PRF.Fixes;
 internal class LockedMapControlsWithVJFix(ConfigFile config) : ConfigurableFix(config)
 {
     protected override string Description =>
-        $"if true, {GetType().Name} is enabled\nFixes locked and stuck controls with map open when Virtual Joystick is enabled.";
+        $"{base.Description}\nFixes locked and stuck controls with map open when Virtual Joystick is enabled.";
     
     // Track whether we turned it off or not, to cover edge case of:
     //  VJ is off => player opens map => manually turns VJ on in settings => closes map, make sure it stays on
