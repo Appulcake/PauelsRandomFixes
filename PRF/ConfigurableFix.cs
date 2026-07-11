@@ -24,7 +24,7 @@ internal abstract class ConfigurableFix : HarmonyPatch
         if (_enabled.Value)
             ApplyPatches();
     }
-
+    
     private void OnEnabledChanged(object sender, EventArgs e)
     {
         if (_enabled.Value)
@@ -32,7 +32,7 @@ internal abstract class ConfigurableFix : HarmonyPatch
         else
             RemovePatches();
     }
-
+    
     private void ApplyPatches()
     {
         if (IsPatched)

@@ -17,13 +17,13 @@ public class PRF : BaseUnityPlugin
     internal new static ManualLogSource Logger { get; private set; } = null!;
     
     internal static List<ConfigurableFix> Fixes { get; } = [];
-
+    
     private void Awake()
     {
         Logger = base.Logger;
         LoadFixes();
     }
-
+    
     private void LoadFixes()
     {
         var fixTypes = typeof(ConfigurableFix)

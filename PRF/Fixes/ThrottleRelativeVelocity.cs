@@ -15,7 +15,7 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
         _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f,
             "Sensitivity of the relative throttle input.");
     }
-
+    
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerThrottleAxis1Controls))]
     [HarmonyPrefix]
     public static bool ThrottleAxis1ControlsReplacer(PilotPlayerState __instance)
