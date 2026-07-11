@@ -59,45 +59,21 @@ internal class FPSBoundMouseFix : ConfigurableFix
         + " on FPS. Since the game uses GetAxis for both mouse and controller axes, with this enabled behaviour will"
         + " be flipped for freelook with controllers, and their sensitivity will be FPS dependent.";
     
-    public static float GetCockpitFreelookSensitivity()
-    {
-        return _cockpitFreelookSensitivity.Value * 0.5f;
-    }
+    public static float GetCockpitFreelookSensitivity() => _cockpitFreelookSensitivity.Value * 0.5f;
     
-    public static float GetMapPanSensitivity()
-    {
-        return _mapPanSensitivity.Value * 25f;
-    }
+    public static float GetMapPanSensitivity() => _mapPanSensitivity.Value * 25f;
     
-    public static float GetOrbitCamSensitivity()
-    {
-        return _orbitCamSensitivity.Value * 0.5f;
-    }
+    public static float GetOrbitCamSensitivity() => _orbitCamSensitivity.Value * 0.5f;
     
-    public static float GetOrbitZoomSensitivity()
-    {
-        return _orbitZoomSensitivity.Value;
-    }
+    public static float GetOrbitZoomSensitivity() => _orbitZoomSensitivity.Value;
     
-    public static float GetTVCamSensitivity()
-    {
-        return _TVCamSensitivity.Value * 0.5f;
-    }
+    public static float GetTVCamSensitivity() => _TVCamSensitivity.Value * 0.5f;
     
-    private static float GetVirtualJoystickCenteringForce()
-    {
-        return _virtualJoystickCenteringForce.Value * 4f;
-    }
+    private static float GetVirtualJoystickCenteringForce() => _virtualJoystickCenteringForce.Value * 4f;
     
-    private static float GetVirtualJoystickSensitivityX()
-    {
-        return _virtualJoystickSensitivityX.Value * 0.5f;
-    }
+    private static float GetVirtualJoystickSensitivityX() => _virtualJoystickSensitivityX.Value * 0.5f;
     
-    private static float GetVirtualJoystickSensitivityY()
-    {
-        return _virtualJoystickSensitivityY.Value * 0.5f;
-    }
+    private static float GetVirtualJoystickSensitivityY() => _virtualJoystickSensitivityY.Value * 0.5f;
     
     // Cockpit freelook (with VJ on + Freelook button, and with regular Freelook)
     [HarmonyPatch(typeof(CameraCockpitState), nameof(CameraCockpitState.UpdateState))]
