@@ -7,16 +7,15 @@ using BepInEx.Logging;
 
 namespace PRF;
 
-
 /// <summary>
-/// Main plugin class.
+///     Main plugin class.
 /// </summary>
-[BepInPlugin(PluginInfo.PLUGIN_GUID,PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 // ReSharper disable once InconsistentNaming
-public class PRF: BaseUnityPlugin
+public class PRF : BaseUnityPlugin
 {
     internal new static ManualLogSource Logger { get; private set; } = null!;
-
+    
     internal static List<ConfigurableFix> Fixes { get; } = [];
     
     private void Awake()
@@ -38,16 +37,15 @@ public class PRF: BaseUnityPlugin
                 } &&
                 typeof(ConfigurableFix).IsAssignableFrom(t) &&
                 t.GetCustomAttribute<FixAttribute>() != null);
-
+        
         foreach (var type in fixTypes)
-        {
             try
             {
                 var fix = (ConfigurableFix)Activator.CreateInstance(type, Config)!;
                 Fixes.Add(fix);
-
+                
                 var attribute = type.GetCustomAttribute<FixAttribute>();
-
+                
                 Logger.LogInfo(
                     $"Loaded fix: {attribute?.DisplayName ?? type.Name}");
             }
@@ -55,11 +53,8 @@ public class PRF: BaseUnityPlugin
             {
                 Logger.LogError($"Failed to load fix {type.Name}: {ex}");
             }
-        }
     }
 }
-
-
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 internal sealed class FixAttribute(string? displayName = null) : Attribute

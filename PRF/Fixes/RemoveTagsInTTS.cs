@@ -8,7 +8,7 @@ namespace PRF.Fixes;
 [Fix]
 [HarmonyPatch(typeof(ChatManager))]
 // ReSharper disable once InconsistentNaming
-internal class RemoveTagsInTTS(ConfigFile config): ConfigurableFix(config)
+internal class RemoveTagsInTTS(ConfigFile config) : ConfigurableFix(config)
 {
     [HarmonyPatch(nameof(ChatManager.RunTTS))]
     [HarmonyPrefix]

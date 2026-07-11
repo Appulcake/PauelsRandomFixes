@@ -5,7 +5,7 @@ namespace PRF.Fixes;
 
 [Fix]
 [HarmonyPatch(typeof(TargetMarker))]
-internal class TargetBoxesOnMinimap(ConfigFile config): ConfigurableFix(config)
+internal class TargetBoxesOnMinimap(ConfigFile config) : ConfigurableFix(config)
 {
     [HarmonyPatch(nameof(TargetMarker.Show))]
     [HarmonyPostfix]

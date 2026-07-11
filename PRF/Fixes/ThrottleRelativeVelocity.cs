@@ -6,14 +6,14 @@ namespace PRF.Fixes;
 
 [Fix]
 [HarmonyPatch]
-internal class ThrottleRelativeVelocity: ConfigurableFix
+internal class ThrottleRelativeVelocity : ConfigurableFix
 {
     private static ConfigEntry<float> _inputSensitivity = null!;
-
+    
     public ThrottleRelativeVelocity(ConfigFile config) : base(config)
     {
-        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f, "Sensitivity of the relative throttle input.");
-
+        _inputSensitivity = config.Bind(GetType().Name, "RelativeSensitivity", 3.00f,
+            "Sensitivity of the relative throttle input.");
     }
     
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerThrottleAxis1Controls))]
@@ -26,17 +26,19 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
         if (PlayerSettings.throttleUseRelative)
         {
             // CHANGES HERE
-            throttleInput = Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime,-1, 1);
+            throttleInput =
+                Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime, -1,
+                    1);
             prevThrottleInput = __instance.simulatedThrottle;
             // End of changes
         }
-
+        
         if (__instance.player.GetButton("Axis Modifier"))
         {
             customAxisInput += throttleInput;
             throttleInput = 0.0f;
         }
-
+        
         var throttleInputDiff = Mathf.Abs(throttleInput - prevThrottleInput);
         if (throttleInputDiff > 0.0 && throttleInputDiff < 0.5)
             __instance.simulatedThrottle =
@@ -60,7 +62,7 @@ internal class ThrottleRelativeVelocity: ConfigurableFix
         if (__instance.collective && PlayerSettings.invertCollective)
             simThrottle = 1f - simThrottle;
         __instance.controlInputs.throttle = Mathf.Clamp01(simThrottle);
-
+        
         return false;
     }
 }

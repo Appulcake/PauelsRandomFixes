@@ -16,46 +16,46 @@ internal class AbsoluteZoom : ConfigurableFix
     private static ConfigEntry<bool> _useAbsolute = null!;
     private static ConfigEntry<bool> _useNegative = null!;
     
-    protected override bool DefaultEnabled => false;
-
     public AbsoluteZoom(ConfigFile config) : base(config)
     {
         _useAbsolute = config.Bind(GetType().Name, "Use Absolute zoom", true,
             "Use absolute zoom. If this is unchecked, this will use the relative implementation.");
-
+        
         _useNegative = config.Bind(GetType().Name, "Use Negative region", true,
             "Whether or not to use the negative region of the axis for the absolute bind. Note that the relative mode REQUIRES your device to have a negative portion.");
         _cockpitSensitivity = config.Bind(GetType().Name, "Relative Cockpit zoom sensitivity", 5f,
             new ConfigDescription(
                 "Sensitivity of the default RELATIVE zoom in cockpit view. Only works if this is set to relative mode.",
                 new AcceptableValueRange<float>(0f, 30f)));
-
+        
         _orbitSensitivity = config.Bind(GetType().Name, "Relative Orbit (cam 2) zoom sensitivity", 1f,
             new ConfigDescription(
                 "Sensitivity of the default RELATIVE zoom in orbit view. Only works if this is set to relative mode.",
                 new AcceptableValueRange<float>(0f, 30f)));
-
+        
         _tvSensitivity = config.Bind(GetType().Name, "Relative Flyby (cam 3) zoom sensitivity", 1f,
             new ConfigDescription(
                 "Sensitivity of the default RELATIVE zoom in flyby view. Only works if this is set to relative mode.",
                 new AcceptableValueRange<float>(0f, 30f)));
     }
-
+    
+    protected override bool DefaultEnabled => false;
+    
     public static float GetCockpitSensitivity()
     {
         return _cockpitSensitivity.Value;
     }
-
+    
     public static float GetOrbitSensitivity()
     {
         return _orbitSensitivity.Value;
     }
-
+    
     public static float GetTVSensitivity()
     {
         return _tvSensitivity.Value;
     }
-
+    
     [HarmonyPatch(typeof(CameraCockpitState), nameof(CameraCockpitState.UpdateState))]
     [HarmonyPostfix]
     // ReSharper disable once InconsistentNaming
@@ -67,8 +67,8 @@ internal class AbsoluteZoom : ConfigurableFix
         cam.mainCamera.fieldOfView = Mathf.Lerp(__instance.minFOV, __instance.maxFOV, input);
         cam.cockpitCamRender.fieldOfView = cam.mainCamera.fieldOfView;
     }
-
-
+    
+    
     [HarmonyPatch(typeof(CameraCockpitState), nameof(CameraCockpitState.UpdateState))]
     [HarmonyTranspiler]
     public static IEnumerable<CodeInstruction> CockpitFovAdjFix(IEnumerable<CodeInstruction> instructions)
@@ -82,13 +82,13 @@ internal class AbsoluteZoom : ConfigurableFix
                 ),
                 new CodeMatch(OpCodes.Ldc_R4, 5f)
             );
-
+        
         if (matcher.IsValid)
         {
             PRF.Logger.LogDebug("Found cockpit fov adjustment constant.");
             matcher.Advance(1);
-
-
+            
+            
             matcher.SetInstruction(
                 new CodeInstruction(
                     OpCodes.Call,
@@ -96,7 +96,7 @@ internal class AbsoluteZoom : ConfigurableFix
                 )
             );
         }
-
+        
         return matcher.InstructionEnumeration();
     }
     
@@ -109,7 +109,7 @@ internal class AbsoluteZoom : ConfigurableFix
         if (_useNegative.Value) input = (input + 1) / 2;
         __instance.viewDistAdjust = Mathf.Lerp(0.0f, 10.0f, input);
     }
-
+    
     [HarmonyPatch(typeof(CameraOrbitState), nameof(CameraOrbitState.Inputs))]
     [HarmonyTranspiler]
     public static IEnumerable<CodeInstruction> OrbitDistFix(IEnumerable<CodeInstruction> instructions)
@@ -123,7 +123,7 @@ internal class AbsoluteZoom : ConfigurableFix
                 ),
                 new CodeMatch(ci => ci.opcode == OpCodes.Call || ci.opcode == OpCodes.Callvirt)
             );
-    
+        
         if (matcher.IsValid)
         {
             PRF.Logger.LogDebug("Orbit zoom view thing found");
@@ -136,10 +136,10 @@ internal class AbsoluteZoom : ConfigurableFix
             );
             matcher.Insert(new CodeInstruction(OpCodes.Mul));
         }
-    
+        
         return matcher.InstructionEnumeration();
     }
-
+    
     [HarmonyPatch(typeof(CameraTVState), nameof(CameraTVState.UpdateState))]
     [HarmonyPostfix]
     public static void AbsoluteZoomTV(CameraTVState __instance, ref CameraStateManager cam)
@@ -163,7 +163,7 @@ internal class AbsoluteZoom : ConfigurableFix
                 ),
                 new CodeMatch(ci => ci.opcode == OpCodes.Call || ci.opcode == OpCodes.Callvirt)
             );
-
+        
         if (matcher.IsValid)
         {
             PRF.Logger.LogDebug("TV zoom view thing found");
@@ -172,11 +172,11 @@ internal class AbsoluteZoom : ConfigurableFix
                 new CodeInstruction(
                     OpCodes.Call,
                     AccessTools.Method(typeof(AbsoluteZoom), nameof(GetTVSensitivity))
-                    )
-                );
+                )
+            );
             matcher.Insert(new CodeInstruction(OpCodes.Mul));
         }
-
+        
         return matcher.InstructionEnumeration();
     }
 }
