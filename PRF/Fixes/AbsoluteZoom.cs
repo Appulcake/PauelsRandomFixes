@@ -41,20 +41,11 @@ internal class AbsoluteZoom : ConfigurableFix
     
     protected override bool DefaultEnabled => false;
     
-    public static float GetCockpitSensitivity()
-    {
-        return _cockpitSensitivity.Value;
-    }
+    public static float GetCockpitSensitivity() => _cockpitSensitivity.Value;
     
-    public static float GetOrbitSensitivity()
-    {
-        return _orbitSensitivity.Value;
-    }
+    public static float GetOrbitSensitivity() => _orbitSensitivity.Value;
     
-    public static float GetTVSensitivity()
-    {
-        return _tvSensitivity.Value;
-    }
+    public static float GetTVSensitivity() => _tvSensitivity.Value;
     
     [HarmonyPatch(typeof(CameraCockpitState), nameof(CameraCockpitState.UpdateState))]
     [HarmonyPostfix]
