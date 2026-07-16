@@ -54,23 +54,24 @@
             <Aliases>global,NuclearOption</Aliases>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="False" Publicize="True"/>
-        <Reference Include="Unity.TextMeshPro" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.TextMeshPro.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.CoreModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.CoreModule.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.AudioModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.AudioModule.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.PhysicsModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.ParticleSystemModule.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.UI" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UI.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.Rendering.Universal" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.RenderPipelines.Universal.Runtime.dll" Private="False" Publicize="True"/>
-        <Reference Include="UnityEngine.JSONSerializeModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.JSONSerializeModule.dll" Private="False" Publicize="True"/>
-        <Reference Include="Rewired" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Rewired_Core.dll" Private="False" Publicize="True"/>
-        <Reference Include="UniTask" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UniTask.dll" Private="False" Publicize="True"/>
         <Reference Include="Mirage" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.dll" Private="False" Publicize="True"/>
+        <Reference Include="Mirage.Authenticators" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.Authenticators.dll" Private="False" Publicize="True"/>
+        <Reference Include="Mirage.Components" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.Components.dll" Private="False" Publicize="True"/>
         <Reference Include="Mirage.SocketLayer" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.SocketLayer.dll" Private="False" Publicize="True"/>
         <Reference Include="Mirage.Sockets.Udp" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.Sockets.Udp.dll" Private="False" Publicize="True"/>
         <Reference Include="Mirage.SteamworksSocket" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.SteamworksSocket.dll" Private="False" Publicize="True"/>
-        <Reference Include="Mirage.Authenticators" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.Authenticators.dll" Private="False" Publicize="True"/>
-        <Reference Include="Mirage.Components" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Mirage.Components.dll" Private="False" Publicize="True"/>
+        <Reference Include="Rewired" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Rewired_Core.dll" Private="False" Publicize="True"/>
+        <Reference Include="UniTask" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UniTask.dll" Private="False" Publicize="True"/>
+        <Reference Include="Unity.TextMeshPro" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.TextMeshPro.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.AssetBundleModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.AudioModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.AudioModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.CoreModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.CoreModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.JSONSerializeModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.JSONSerializeModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.ParticleSystemModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.PhysicsModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.Rendering.Universal" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.RenderPipelines.Universal.Runtime.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.UI" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UI.dll" Private="False" Publicize="True"/>
         <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\com.rlabrecque.steamworks.net.dll" Private="False" Publicize="True"/>
     </ItemGroup>
 

@@ -18,6 +18,8 @@ internal class BrakeAsAxis : ConfigurableFix
     protected override string Description =>
         $"{base.Description}\nFixes \"Brake Axis\" bind to function as an analogue brake input.";
     
+    protected override bool DefaultEnabled => false;
+    
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerControls))]
     [HarmonyPostfix]
     public static void PlayerControlsPostfix(PilotPlayerState __instance)

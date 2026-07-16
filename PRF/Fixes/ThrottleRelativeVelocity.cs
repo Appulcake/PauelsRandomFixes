@@ -61,7 +61,9 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
             customAxisOutput += Mathf.Clamp(customAxisInput - customAxisOutput, -Time.deltaTime, Time.deltaTime);
         if (!Mathf.Approximately(__instance.controlInputs.customAxis1, customAxisOutput))
             __instance.controlInputs.customAxis1 = Mathf.Clamp01(customAxisOutput);
-        if (PlayerSettings.throttleUseNegative || PlayerSettings.throttleUseRelative) // ADDED throttleUseRelative to this condition because the relative input thing can go negative.
+        if (PlayerSettings.throttleUseNegative ||
+            PlayerSettings
+                .throttleUseRelative) // ADDED throttleUseRelative to this condition because the relative input thing can go negative.
             simThrottle = (float)(0.5 * (simThrottle + 1.0));
         if (__instance.collective && PlayerSettings.invertCollective)
             simThrottle = 1f - simThrottle;
