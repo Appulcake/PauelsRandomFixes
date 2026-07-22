@@ -14,8 +14,8 @@
 
         <!-- Package Information -->
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageProjectUrl>https://github.com/pauel3312/NOMissingWeapons</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/pauel3312/NOMissingWeapons</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/pauel3312/PauelsRandomFixes</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/pauel3312/PauelsRandomFixes</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
 
         <!-- Build Information -->
