@@ -36,7 +36,7 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
     protected override string Description =>
         "Fixes the possibility of fired bullets and lasers impacting the owner's plane." +
         " This can especially happen when on a server with high ping, in certain planes" +
-        " (Brawler's 35mm and Medusa's laser are particularly susceptible), flying faster, manoeuvring" +
+        " (Brawler's 35mm and Medusa's laser are particularly susceptible), flying faster, and manoeuvring" +
         " aggressively while firing.\n\n" +
         "Fix for bullets impacting and damaging own plane is fully effective on client alone, as client's BulletSim" +
         " has the sole authority to trigger the impacts that cause damage. With the fix on client, bullets ignore" +
