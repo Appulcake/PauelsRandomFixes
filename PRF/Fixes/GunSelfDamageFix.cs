@@ -29,19 +29,24 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         AccessTools.Method(typeof(GunSelfDamageFix), nameof(LinecastIgnoringOwner))
         ?? throw new MissingMethodException("Could not find LinecastIgnoringOwner.");
     
+    private static readonly MethodInfo LaserFilteredLinecast =
+        AccessTools.Method(typeof(GunSelfDamageFix), nameof(LaserLinecastIgnoringOwner))
+        ?? throw new MissingMethodException("Could not find LaserLinecastIgnoringOwner.");
+    
     protected override string Description =>
-        "Fixes the possibility of fired bullets impacting the owner's plane/vehicle, which"
-        + " really shouldn't even be possible in any circumstance. This can especially happen when playing on a server"
-        + " with high ping, in certain planes (Brawler with its 35mm is especially susceptible), going at higher" +
-        " speeds, manoeuvring aggressively while firing."
-        + "\n\nFix is most effective (and only required to fully work) on client as client's BulletSim has the authority to" + 
-        " trigger the impacts that cause damage, and is done by ignoring bullet collision with owner's vehicle, continuing" +
-        " the bullet's path."
-        + "\n\nThe fix on server's end adds an extra safeguard that prevents a bullet self-hit claim from a client from"
-        + " applying damage to their vehicle, but it won't stop the client's BulletSim to already be stopped as it"
-        + " called an impact, thus an unfixed client while won't be damaging themselves, will still have their bullets"
-        + " that collided with them just disappear and no longer keep travelling to hit original intended target. Doesn't"
-        + " interfere with clients running the fix themselves.";
+        "Fixes the possibility of fired bullets and lasers impacting the owner's plane." +
+        " This can especially happen when on a server with high ping, in certain planes" +
+        " (Brawler's 35mm and Medusa's laser are particularly susceptible), flying faster, manoeuvring" +
+        " aggressively while firing.\n\n" +
+        "Fix for bullets impacting and damaging own plane is fully effective on client alone, as client's BulletSim" +
+        " has the sole authority to trigger the impacts that cause damage. With the fix on client, bullets ignore" +
+        " collision with the owner's plane.\n\n" +
+        "Fix for lasers impacting and damaging own plane is required on server, as the damage is" +
+        "only applied on server's end. With the fix on server, lasers ignore collision with the owner's plane.\n\n" +
+        "The fix on server also rejects a bullet self-hit claim from a client," +
+        " but it won't prevent the client's BulletSim from stopping as it impacted there.\n" +
+        "Thus an unfixed client, while won't be damaging themselves with bullets, will still have their bullets that" +
+        " collided with them disappear and no longer hit and damage their original intended target.";
     
     // Client sided patch for the client-authoritative BulletSim
     // This path has: IsServer: False (not on server's side) | HasAuthority: True (can call impacts for damage) | LocalSim: True (simulated by this client, = owner of gun)
@@ -78,8 +83,33 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         return matcher.InstructionEnumeration();
     }
     
+    // Laser damage is server-sided, but is still helpful on clients too to make sure their beam render also keeps going
+    [HarmonyPatch(typeof(Laser), nameof(Laser.FixedUpdate))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> LaserFixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        var matcher = new CodeMatcher(instructions);
+        
+        // Laser.FixedUpdate has one Physics.Linecast
+        // Physics.Linecast(directionTransform.position, vector, out hitInfo, -8193)
+        matcher
+            .MatchForward(
+                false,
+                new CodeMatch(instruction => instruction.Calls(PhysicsLinecast)))
+            .ThrowIfInvalid("Could not find the Laser.FixedUpdate Linecast.");
+        
+        // Add Laser's this as argument, which is ldarg.0
+        matcher.InsertAndAdvance(new CodeInstruction(OpCodes.Ldarg_0));
+        
+        // Redirect RaycastHit linecast check to our filtered method
+        matcher.Instruction.opcode = OpCodes.Call;
+        matcher.Instruction.operand = LaserFilteredLinecast;
+        
+        return matcher.InstructionEnumeration();
+    }
+    
     private static bool LinecastIgnoringOwner(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask,
-        Unit owner)
+        Unit? owner)
     {
         var hit = Physics.Linecast(start, end, out hitInfo, layerMask);
         
@@ -89,12 +119,15 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         if (!ColliderBelongsToOwner(hitInfo.collider, owner))
             return true;
         
-        
         // RaycastNonAlloc check would not order hits by distance by default, causing a non-collide/damage check to also
         // apply to a very close target sometimes (that'd be hit within less than one update frame)
         // Or further chain-hits within same owner (multiple components hit) would not be checked for any more
         return TryFindNearestNonOwnerHit(start, end, layerMask, owner, out hitInfo);
     }
+    
+    // Reuse/reformat existing LinecastIgnoringOwner to fit coming from Laser fix
+    private static bool LaserLinecastIgnoringOwner(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask,
+        Laser laser) => LinecastIgnoringOwner(start, end, out hitInfo, layerMask, laser.attachedUnit);
     
     private static bool TryFindNearestNonOwnerHit(Vector3 start, Vector3 end, int layerMask, Unit owner,
         out RaycastHit hitInfo)
@@ -191,6 +224,7 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
     // So the bullet won't continue flying on client and is "eaten", but at least it won't damage/destroy their plane
     [HarmonyPatch(typeof(Unit), CmdClaimHitUserCodeMethod)]
     [HarmonyPrefix]
+    // ReSharper disable once InconsistentNaming
     private static bool RejectBulletSelfHitClaim(Unit __instance, PersistentID __0)
     {
         var hitID = __0;
