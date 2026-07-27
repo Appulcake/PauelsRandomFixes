@@ -79,14 +79,6 @@ Manager's in game GUI (F1 to open by default).
 > Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
 ---
-#### RestrictedWeaponsAISpawnFix
-> Fixes broken AI spawns when they have empty hardpoints (e.g. because of mission limitations).
-> <br><br>Server only, on by default.
----
-#### TargetBoxesOnMinimap
-> Fixes 0.33 accidentally removing the target box indicators around target markers on minimap.
-> <br><br>Client only, on by default.
----
 #### ThrottleRelativeVelocity
 > Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary, fixed 
 > rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
