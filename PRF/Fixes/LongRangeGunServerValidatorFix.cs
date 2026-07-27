@@ -9,11 +9,6 @@ namespace PRF.Fixes;
 [HarmonyPatch]
 internal class LongRangeGunServerValidatorFix(ConfigFile config) : ConfigurableFix(config)
 {
-    protected override string Description =>
-        $"{base.Description}\nFixes server rejecting client player bullet impact calls from shots further than 3000m" + 
-        " away (game has a hardcoded 3000m or 5s bullet limit for HitPlausible), so that player controlled long range" + 
-        " guns (e.g. railguns) can do proper damage when playing on a server. Only needed on server's side.";
-    
     // Max 30 seconds to track a bullet (~2000m/s railgun projectile with drag goes out to ~60km max that way)
     private const float ExtendedSnapshotLifetime = 30f;
     
@@ -29,6 +24,11 @@ internal class LongRangeGunServerValidatorFix(ConfigFile config) : ConfigurableF
     private const float MaximumReportedSpeedMultiplier = 3f;
     
     private static readonly Dictionary<PersistentID, List<ExtendedFiringSnapshot>> ExtendedFiringLogs = new();
+    
+    protected override string Description =>
+        $"{base.Description}\nFixes server rejecting client player bullet impact calls from shots further than 3000m" +
+        " away (game has a hardcoded 3000m or 5s bullet limit for HitPlausible), so that player controlled long range" +
+        " guns (e.g. railguns) can do proper damage when playing on a server. Only needed on server's side.";
     
     [HarmonyPatch(typeof(HitValidator), nameof(HitValidator.LogFiring))]
     [HarmonyPostfix]

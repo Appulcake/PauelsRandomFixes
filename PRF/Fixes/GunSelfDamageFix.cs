@@ -71,7 +71,7 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         // Vector3 start
         // Vector3 end (start + this.velocity *1.5f * deltaTime)
         // out RaycastHit hitInfo
-        // int layerMask (-8193 / layer 13)
+        // ~(int) PhysicsLayers.ExclusionZonesMask
         //
         // Adding another argument to forward Unit owner, which is ldarg.3
         matcher.InsertAndAdvance(new CodeInstruction(OpCodes.Ldarg_3));
@@ -91,7 +91,7 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         var matcher = new CodeMatcher(instructions);
         
         // Laser.FixedUpdate has one Physics.Linecast
-        // Physics.Linecast(directionTransform.position, vector, out hitInfo, -8193)
+        // Physics.Linecast(directionTransform.position, vector, out hitInfo, ~(int) PhysicsLayers.ExclusionZonesMask)
         matcher
             .MatchForward(
                 false,
