@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using BepInEx.Configuration;
 using HarmonyLib;
+using NuclearOption.UI;
 using UnityEngine;
 
 namespace PRF.Fixes;
@@ -409,12 +410,25 @@ internal class FPSBoundMouseFix : ConfigurableFix
             _globalJoystickPos = Vector3.Lerp(a, Vector3.zero,
                 PlayerSettings.virtualJoystickCentering * GetVirtualJoystickCenteringForce() * Time.deltaTime);
         }
-        else if (_enableCenteringDuringFreelook.Value ||
-                 !PlayerSettings
-                     .virtualJoystickEnabled) // Account for VJ being turned off via hotkey / LockedMapControlsWithVJFix
+        // Account for VJ being turned off via hotkey / LockedMapControlsWithVJFix
+        else if (_enableCenteringDuringFreelook.Value || !PlayerSettings.virtualJoystickEnabled)
         {
-            _globalJoystickPos =
-                Vector3.zero; // No interpolation to zero to emulate instant turn off when toggling VJ, otherwise this falls behind toggling VJ setting virtualJoystickPos to zero
+            // No interpolation to zero to emulate instant turn off when toggling VJ, otherwise this falls behind toggling VJ setting virtualJoystickPos to zero
+            _globalJoystickPos = Vector3.zero;
+        }
+    }
+    
+    [HarmonyPatch(typeof(LeaderboardMenu), nameof(LeaderboardMenu.Close))]
+    [HarmonyPostfix]
+    public static void OnLeaderboardClosePostfix()
+    {
+        // Re-center VJ on escape menu close, as the PilotPlayerState don't seem to run during that but the mouse movements are still recorded
+        // which'd cause VJ to move on escape menu close based on recent mouse movement in escape menu
+        if (PlayerSettings.virtualJoystickEnabled &&
+            SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
+        {
+            _globalJoystickPos = Vector3.zero;
+            SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
         }
     }
     
@@ -468,7 +482,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
                     (_enableCenteringDuringFreelook
                      .Value) // Enable centering to continue happening during freelook with config enabled
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
-                if (!DynamicMap.mapMaximized && !RadialMenuMain.IsInUse() && !Leaderboard.IsOpen())
+                if (!DynamicMap.mapMaximized && !RadialMenuMain.IsInUse() && !LeaderboardMenu.IsOpen())
                 {
                     __instance.pitchInput =
                         (float)(-(double)SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.y /

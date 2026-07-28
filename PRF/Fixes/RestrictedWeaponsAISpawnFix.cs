@@ -10,6 +10,12 @@ namespace PRF.Fixes;
 [HarmonyPatch]
 internal class RestrictedWeaponsAISpawnFix(ConfigFile config) : ConfigurableFix(config)
 {
+    // Should no longer be necessary - WeaponManager.SelectAIAircraftWeapons() now properly checks for
+    // WeaponChecker.GetAvailableWeaponsNonAlloc returned legalWeaponsCache to have a .Count > 0 before
+    // trying to add RandomItem() to weaponMount, which should resolve the issue entirely
+    // (Player path this way was not affected in this case and should keep working)
+    protected override bool DefaultEnabled => false;
+    
     protected override string Description =>
         $"{base.Description}\nFixes broken AI spawns when they have empty hardpoints.";
     

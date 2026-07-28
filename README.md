@@ -58,6 +58,12 @@ Manager's in game GUI (F1 to open by default).
 > This is done by temporarily toggling Virtual Joystick off when map is opened, and on again (if it was on before) when closed.
 > <br><br>Client only, on by default (does nothing when not using Virtual Joystick).
 ---
+#### LongRangeGunServerValidatorFix
+> Fixes server rejecting client player bullet impact calls from shots further than 3000m away (game has a hardcoded 3000m 
+> or 5s bullet limit for HitPlausible), so that player controlled long range guns (e.g. railguns) can do proper damage 
+> when playing on a server.
+> <br><br>Server only, on by default (does nothing on client).
+---
 #### LookAtTargetFix
 > Allows holding "Look At Target" keybind in first person (cockpit) camera to point target to a target, snaps back to center
 > when released. Similar to what "Center View" does with Gameplay Settings => Target Padlock on, but that one is a toggle,
@@ -72,14 +78,6 @@ Manager's in game GUI (F1 to open by default).
 > Enabled needing to hold down Free Look button to activate Free Look, even when Virtual Joystick is disabled. While using 
 > Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
----
-#### RestrictedWeaponsAISpawnFix
-> Fixes broken AI spawns when they have empty hardpoints (e.g. because of mission limitations).
-> <br><br>Server only, on by default.
----
-#### TargetBoxesOnMinimap
-> Fixes 0.33 accidentally removing the target box indicators around target markers on minimap.
-> <br><br>Client only, on by default.
 ---
 #### ThrottleRelativeVelocity
 > Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary, fixed 
