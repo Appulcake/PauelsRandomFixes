@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -84,8 +85,9 @@ internal class LongRangeGunServerValidatorFix(ConfigFile config) : ConfigurableF
         }
         
         // This value should be identical for every possible snapshot, so calculate it only once
-        // Harmony non-ref patch warning I believe is incorrect, as no values are being modified here, only read
+#pragma warning disable Harmony003
         var reportedHitSpeed = hitVelocity.magnitude;
+#pragma warning restore Harmony003
         
         for (var i = snapshots.Count - 1; i >= 0; i--)
         {
@@ -103,12 +105,16 @@ internal class LongRangeGunServerValidatorFix(ConfigFile config) : ConfigurableF
     {
         // Check whether projectile's lifetime is in sane limits, ExtendedSnapshotLifetime's 30s should cover plenty distance
         // More similar I believe incorrect Harmony003 warnings, we're only reading from these values here so shouldn't matter
+#pragma warning disable Harmony003
         var age = now - snapshot.Timestamp;
+#pragma warning restore Harmony003
         
         if (age is < 0f or > ExtendedSnapshotLifetime)
             return false;
         
+#pragma warning disable Harmony003
         var toHit = hitPosition - snapshot.Origin;
+#pragma warning restore Harmony003
         var hitTravelDistance = toHit.magnitude;
         
         switch (hitTravelDistance)
@@ -122,14 +128,18 @@ internal class LongRangeGunServerValidatorFix(ConfigFile config) : ConfigurableF
                 return false;
         }
         
+#pragma warning disable Harmony003
         var firingSpeed = snapshot.Velocity.magnitude;
+#pragma warning restore Harmony003
         
         //
         if (firingSpeed <= Mathf.Epsilon)
             return false;
         
         // Rough estimated sane angle limits of where the shot could've come from to be plausible, I just went with 10 degrees
+#pragma warning disable Harmony003
         var angle = Vector3.Angle(toHit, snapshot.Velocity);
+#pragma warning restore Harmony003
         
         if (angle >= MaximumAngle)
             return false;
