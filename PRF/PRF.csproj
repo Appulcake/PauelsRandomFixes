@@ -72,6 +72,7 @@
         <Reference Include="UnityEngine.PhysicsModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.Rendering.Universal" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.RenderPipelines.Universal.Runtime.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.UI" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UI.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.UIModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UIModule.dll" Private="False" Publicize="True"/>
         <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\com.rlabrecque.steamworks.net.dll" Private="False" Publicize="True"/>
     </ItemGroup>
 
