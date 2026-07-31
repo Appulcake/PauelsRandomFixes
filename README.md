@@ -30,6 +30,12 @@ Manager's in game GUI (F1 to open by default).
 > Fixes allowing being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
 > <br><br>Client only, on by default.
 ---
+#### DisableVerticalCameraInCockpitFix
+> When enabled, prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical", 
+> "Move Up", "Move Down"). Functionality in Free camera and Editor stays the same, only reverting this 0.34 change for 
+> cockpit camera.
+> <br><br>Client only, on by default.
+---
 #### FPSBoundMouseFix
 > Fixes the game double applying deltaTime to various mouse axis binds (e.g. using mouse for Free Look, Virtual Joystick, 
 > Map panning), causing mouse input sensitivity to be inversely proportional to FPS (higher FPS = slower mouse).<br><br>
