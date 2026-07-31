@@ -98,6 +98,13 @@ Manager's in game GUI (F1 to open by default).
 > Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
 ---
+#### TargetDesignatorFix
+> Fixes Target Designator indicator on center of screen inconsistently showing depending on weapon selected, and not 
+> properly updating on gear-up state until weapons are swapped.
+> <br><br>Supports configuring to make sure the icon is always on regardless of gear/safety (on by default), and to 
+> fade out the icon when safety is on (off by default, configurable fade-out opacity).
+> <br><br>Client only, on by default.
+---
 #### ThrottleRelativeVelocity
 > Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary, fixed 
 > rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
