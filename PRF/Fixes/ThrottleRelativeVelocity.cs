@@ -1,3 +1,4 @@
+using System;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -24,50 +25,56 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
     [HarmonyPrefix]
     public static bool ThrottleAxis1ControlsReplacer(PilotPlayerState __instance)
     {
-        var throttleInput = Mathf.Clamp(__instance.player.GetAxisRaw("Throttle"), -1f, 1f);
-        var prevThrottleInput = Mathf.Clamp(__instance.player.GetAxisRawPrev("Throttle"), -1f, 1f);
-        var customAxisInput = Mathf.Clamp(__instance.player.GetAxisRaw("Custom Axis 1"), -1f, 1f);
-        if (PlayerSettings.throttleUseRelative)
+        // Early exit when not using relative throttle to prevent any interference
+        if (!PlayerSettings.throttleUseRelative)
+            return true;
+        
+        // Ended up needing to rewrite this to
+        // 1) support analogue throttle changes to custom axis 1 (e.g. when holding axis modifier + throttle inputs)
+        // 2) current throttle state not overwriting custom axis state when axis modifier was held
+        // 3) split setting throttle vs custom axis state properly
+        // This was also for necessary compatibility with something like ManualEngineSwivelFix
+        
+        var inputPlayer = __instance.player;
+        var throttleInput = Mathf.Clamp(inputPlayer.GetAxisRaw("Throttle"), -1f, 1f);
+        
+        var axisModifier = inputPlayer.GetButton("Axis Modifier");
+        
+        if (!axisModifier)
         {
-            // CHANGES HERE
-            throttleInput =
-                Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime, -1,
-                    1);
-            prevThrottleInput = __instance.simulatedThrottle;
-            // End of changes
+            __instance.simulatedThrottle = Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime, -1f, 1f);
         }
         
-        if (__instance.player.GetButton("Axis Modifier"))
-        {
-            customAxisInput += throttleInput;
-            throttleInput = 0.0f;
-        }
-        
-        var throttleInputDiff = Mathf.Abs(throttleInput - prevThrottleInput);
-        if (throttleInputDiff > 0.0 && throttleInputDiff < 0.5)
-            __instance.simulatedThrottle =
-                throttleInput; // if throttle has linear movement (moved less than half the axis in a frame)
-        else if (Mathf.Abs(throttleInput) > 0.5) // if throttle is binary and not zero
-            // force slow throttle on binary input.
-            __instance.simulatedThrottle += Mathf.Clamp(throttleInput - __instance.simulatedThrottle, -Time.deltaTime,
-                Time.deltaTime);
-        var simThrottle = __instance.simulatedThrottle;
-        var prevCustomAxisInput = Mathf.Clamp(__instance.player.GetAxisRawPrev("Custom Axis 1"), -1f, 1f);
-        var customAxisDiff = Mathf.Abs(customAxisInput - prevCustomAxisInput);
+        var customAxisInput = Mathf.Clamp(inputPlayer.GetAxisRaw("Custom Axis 1"), -1f, 1f);
+        var previousCustomAxisInput = Mathf.Clamp(inputPlayer.GetAxisRawPrev("Custom Axis 1"), -1f, 1f);
+        var customAxisDifference = Mathf.Abs(customAxisInput - previousCustomAxisInput);
         var customAxisOutput = __instance.controlInputs.customAxis1;
-        if (customAxisDiff > 0.0 && customAxisDiff < 0.5)
+        
+        if (customAxisDifference is > 0f and < 0.5f)
+        {
             customAxisOutput = customAxisInput;
-        else if (Mathf.Abs(customAxisInput) > 0.5)
+        }
+        else if (Mathf.Abs(customAxisInput) > 0.5f)
+        {
             customAxisOutput += Mathf.Clamp(customAxisInput - customAxisOutput, -Time.deltaTime, Time.deltaTime);
+        }
+        
+        if (axisModifier)
+        {
+            customAxisOutput += throttleInput * Time.deltaTime;
+        }
+        
+        customAxisOutput = Mathf.Clamp01(customAxisOutput);
+        
         if (!Mathf.Approximately(__instance.controlInputs.customAxis1, customAxisOutput))
-            __instance.controlInputs.customAxis1 = Mathf.Clamp01(customAxisOutput);
-        if (PlayerSettings.throttleUseNegative ||
-            PlayerSettings
-                .throttleUseRelative) // ADDED throttleUseRelative to this condition because the relative input thing can go negative.
-            simThrottle = (float)(0.5 * (simThrottle + 1.0));
+            __instance.controlInputs.customAxis1 = customAxisOutput;
+        
+        var simulatedThrottle = 0.5f * (__instance.simulatedThrottle + 1f);
+        
         if (__instance.collective && PlayerSettings.invertCollective)
-            simThrottle = 1f - simThrottle;
-        __instance.controlInputs.throttle = Mathf.Clamp01(simThrottle);
+            simulatedThrottle = 1f - simulatedThrottle;
+        
+        __instance.controlInputs.throttle = Mathf.Clamp01(simulatedThrottle);
         
         return false;
     }
