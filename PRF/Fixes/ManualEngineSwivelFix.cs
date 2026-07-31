@@ -27,13 +27,23 @@ internal class ManualEngineSwivelFix : ConfigurableFix
     public ManualEngineSwivelFix(ConfigFile config) : base(config)
     {
         _disableLowSpeedSwivelLimit = config.Bind(GetType().Name, "DisableLowSpeedSwivelLimit", true,
-            "Also disable the newly introduced 45 degree swivel limit in manual mode when flying slowly.");
+            "Also disable the newly introduced 45 degree swivel limit in when flying slowly, in manual mode.");
         _customAxisSwitchesToManual = config.Bind(GetType().Name, "AllowAxisInputToManual", true,
-            "Allow Custom Axis 1 input to switch auto vectoring to manual.");
+            "When enabled, player inputs on Custom Axis 1 (directly or via Throttle input when holding" +
+            " \"Axis Modifier\") switches auto vectoring to manual.");
     }
     
     protected override string Description =>
-        "";
+        "When enabled, allows overriding engine swivel system to be toggled between auto vs fully manual, without" +
+        " the game trying to be \"smart\" about it and change engine vector whenever it feels like it. In manual mode," +
+        " the swivel will always stay where player points it, unless specifically toggled back to auto mode." +
+        "\n\nToggle by holding \"Axis Modifier\" and press \"Toggle Flight Assist\" (this will only toggle" +
+        " engine vectoring mode, not flight assist itself, to allow toggling FA and engine vector mode separately)." +
+        "\n\nOptionally, can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to manual" +
+        " vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first" +
+        " (both enabled by default).\n\nThis engine vectoring fix is applicable to both swivel duct system (Vagrant," + 
+        " Medusa), and ducted thrust system craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep" + 
+        " (e.g. Alkyon).";
     
     protected override bool DefaultEnabled => false;
     
@@ -214,6 +224,10 @@ internal class ManualEngineSwivelFix : ConfigurableFix
     [HarmonyPrefix]
     private static void PlayerThrottleAxis1ControlsPrefix(PilotPlayerState __instance)
     {
+        // Initial structure of PlayerThrottleAxis1ControlsPrefix was based on AI assisted suggestion on how to
+        // approach checking for Custom Axis modification detection to disengage auto mode
+        // Also added an AxisInputThreshold to filter out extremely minute changes (erroneous inputs from jitter)
+        
         if (!_customAxisSwitchesToManual.Value)
             return;
         
@@ -235,10 +249,6 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         
         var axisModifier = inputPlayer.GetButton("Axis Modifier");
         
-        /*
-         * Do not treat the axis's existing resting position as input when
-         * entering a new aircraft. Seed our own previous values first.
-         */
         if (!_axisInputInitialized)
         {
             _customAxisRawPrevious = customAxisRaw;
@@ -258,10 +268,8 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         var modifierThrottleChanged =
             axisModifier && Mathf.Abs(throttleRaw - _throttleRawPrevious) > AxisInputThreshold;
         
-        /*
-         * Always update the stored physical state, even if already manual,
-         * so returning to automatic does not compare against stale inputs.
-         */
+        // Keep updating stored input even in manual to prevent toggling mode from returning to some very old,
+        // drastically different state first
         _customAxisRawPrevious = customAxisRaw;
         _throttleRawPrevious = throttleRaw;
         _axisModifierPrevious = axisModifier;
@@ -272,10 +280,6 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         if (!customAxisChanged && !modifierPressedWithThrottle && !modifierThrottleChanged)
             return;
         
-        /*
-         * Avoid running the component search every input invocation. It is
-         * only needed when genuine physical input has changed.
-         */
         if (!HasSwivelSystem(aircraft))
             return;
         

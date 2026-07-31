@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;

@@ -1,4 +1,3 @@
-using System;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -41,9 +40,9 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
         var axisModifier = inputPlayer.GetButton("Axis Modifier");
         
         if (!axisModifier)
-        {
-            __instance.simulatedThrottle = Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime, -1f, 1f);
-        }
+            __instance.simulatedThrottle =
+                Mathf.Clamp(__instance.simulatedThrottle + throttleInput * _inputSensitivity.Value * Time.deltaTime,
+                    -1f, 1f);
         
         var customAxisInput = Mathf.Clamp(inputPlayer.GetAxisRaw("Custom Axis 1"), -1f, 1f);
         var previousCustomAxisInput = Mathf.Clamp(inputPlayer.GetAxisRawPrev("Custom Axis 1"), -1f, 1f);
@@ -51,18 +50,11 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
         var customAxisOutput = __instance.controlInputs.customAxis1;
         
         if (customAxisDifference is > 0f and < 0.5f)
-        {
             customAxisOutput = customAxisInput;
-        }
         else if (Mathf.Abs(customAxisInput) > 0.5f)
-        {
             customAxisOutput += Mathf.Clamp(customAxisInput - customAxisOutput, -Time.deltaTime, Time.deltaTime);
-        }
         
-        if (axisModifier)
-        {
-            customAxisOutput += throttleInput * Time.deltaTime;
-        }
+        if (axisModifier) customAxisOutput += throttleInput * Time.deltaTime;
         
         customAxisOutput = Mathf.Clamp01(customAxisOutput);
         

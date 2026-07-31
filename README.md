@@ -70,6 +70,19 @@ Manager's in game GUI (F1 to open by default).
 > while this one is only active as long as you hold the bind down, to easier temporarily look at your target.
 > <br><br>Client only, on by default.
 ---
+#### ManualEngineSwivelFix
+> When enabled, allows overriding engine swivel system to be toggled between auto vs fully manual, without the game trying 
+> to be "smart" about it and change engine vector whenever it feels like it. In manual mode, the swivel will always stay 
+> where player points it, unless specifically toggled back to auto mode.
+> <br><br>Toggle by holding "Axis Modifier" and press "Toggle Flight Assist" (this will only toggle engine vectoring mode, 
+> not flight assist itself, to allow toggling FA and engine vector mode separately).
+> <br><br>Optionally, you can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to manual 
+> vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first (both enabled 
+> by default).
+> <br><br>This engine vectoring fix is applicable to both swivel duct system (Vagrant, Medusa), and ducted thrust system 
+> craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep (e.g. Alkyon).
+> <br><br>Client only, off by default.
+---
 #### RemoveTagsInTTS
 > Prevents TTS from reading out HTML tags in messages.
 > <br><br>Client only, on by default.
@@ -82,5 +95,6 @@ Manager's in game GUI (F1 to open by default).
 #### ThrottleRelativeVelocity
 > Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary, fixed 
 > rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
+> <br>Also works when changing Custom Axis with throttle when holding "Axis Modifier" key.
 > <br><br>Not relevant (or active) if you don't have Relative Throttle on in Controls settings (i.e. when using a physical 
 > throttle slider).
