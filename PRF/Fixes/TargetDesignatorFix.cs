@@ -18,13 +18,13 @@ internal class TargetDesignatorFix : ConfigurableFix
     
     public TargetDesignatorFix(ConfigFile config) : base(config)
     {
-        _alwaysShowIcon = config.Bind(GetType().Name, "AlwaysShowIcon", true,
-            "Always show Target Designator icon, even when weapon safety is on (landing gear down).");
-        _fadeWhenSafetyOn = config.Bind(GetType().Name, "FadeIconWhenSafetyOn", false,
-            "Fade out Target Designator icon when weapon safety is on (landing gear down).");
-        _opacitySafetyOn = config.Bind(GetType().Name, "IconOpacityWithSafetyOn", 0.25f,
+        _alwaysShowIcon = config.Bind(GetType().Name, "Always Show Icon", true,
+            "Always show Target Designator icon, even when the selected weapon's safety is on.");
+        _fadeWhenSafetyOn = config.Bind(GetType().Name, "Fade Icon When Safety Is On", false,
+            "Fade the Target Designator icon while weapon safety is on.");
+        _opacitySafetyOn = config.Bind(GetType().Name, "Icon Opacity With Safety On", 0.25f,
             new ConfigDescription(
-                "Target Designator icon's opacity when Weapon Safety is on and FadeIconWhenSafetyOn is enabled.",
+                "Target Designator icon opacity while weapon safety is on and FadeIconWhenSafetyOn is enabled.",
                 new AcceptableValueRange<float>(0f, 1f)));
     }
     

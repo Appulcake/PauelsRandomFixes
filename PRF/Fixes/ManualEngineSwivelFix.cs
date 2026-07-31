@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Reflection.Emit;
 using BepInEx.Configuration;
 using HarmonyLib;
 using Rewired;
@@ -16,6 +18,9 @@ internal class ManualEngineSwivelFix : ConfigurableFix
     private static ConfigEntry<bool> _disableLowSpeedSwivelLimit = null!;
     private static ConfigEntry<bool> _customAxisSwitchesToManual = null!;
     
+    private static ConfigEntry<bool> _enableLongPressToggle = null!;
+    private static ConfigEntry<LongPressToggleInput> _longPressToggleInput = null!;
+    
     private static Aircraft? _stateAircraft;
     private static bool _manualSwivelEnabled;
     
@@ -26,11 +31,16 @@ internal class ManualEngineSwivelFix : ConfigurableFix
     
     public ManualEngineSwivelFix(ConfigFile config) : base(config)
     {
-        _disableLowSpeedSwivelLimit = config.Bind(GetType().Name, "DisableLowSpeedSwivelLimit", true,
+        _disableLowSpeedSwivelLimit = config.Bind(GetType().Name, "Disable Low Speed Swivel Limit", true,
             "Also disable the newly introduced 45 degree swivel limit in when flying slowly, in manual mode.");
-        _customAxisSwitchesToManual = config.Bind(GetType().Name, "AllowAxisInputToManual", true,
+        _customAxisSwitchesToManual = config.Bind(GetType().Name, "Axis Input Switches To Manual", true,
             "When enabled, player inputs on Custom Axis 1 (directly or via Throttle input when holding" +
             " \"Axis Modifier\") switches auto vectoring to manual.");
+        _enableLongPressToggle = config.Bind(GetType().Name, "Enable Long Press Toggle Hotkey", false,
+            "Enables an additional long press input for toggling engine vectoring.");
+        _longPressToggleInput = config.Bind(GetType().Name, "Long Press Toggle Hotkey", LongPressToggleInput.Radar,
+            "Existing input whose long press action toggles engine vectoring, when EnableLongPressToggle is enabled." +
+            " Its normal short press action remains unchanged.");
     }
     
     protected override string Description =>
@@ -41,8 +51,8 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         " engine vectoring mode, not flight assist itself, to allow toggling FA and engine vector mode separately)." +
         "\n\nOptionally, can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to manual" +
         " vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first" +
-        " (both enabled by default).\n\nThis engine vectoring fix is applicable to both swivel duct system (Vagrant," + 
-        " Medusa), and ducted thrust system craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep" + 
+        " (both enabled by default).\n\nThis engine vectoring fix is applicable to both swivel duct system (Vagrant," +
+        " Medusa), and ducted thrust system craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep" +
         " (e.g. Alkyon).";
     
     protected override bool DefaultEnabled => false;
@@ -67,10 +77,20 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         _axisInputInitialized = false;
     }
     
-    private static void ToggleManualSwivel(Aircraft aircraft, bool? enabled = null)
+    private static bool TrySetManualSwivel(Aircraft? aircraft, bool? enabled = null)
     {
+        if (aircraft == null || !GameManager.IsLocalAircraft(aircraft))
+            return false;
+        
+        // Clean up / potentially reset aircraft state before checking for swivel system
         CheckAircraftState(aircraft);
+        
+        if (!HasSwivelSystem(aircraft))
+            return false;
+        
         _manualSwivelEnabled = enabled ?? !_manualSwivelEnabled;
+        
+        return true;
     }
     
     private static void ClearStateForAircraft(Aircraft aircraft)
@@ -202,22 +222,13 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         if (GameManager.gameState != GameState.SinglePlayer && GameManager.gameState != GameState.Multiplayer)
             return true;
         
-        if (!GameManager.IsLocalAircraft(__instance))
-            return true;
-        
         var inputPlayer = ReInput.players.GetPlayer(0);
         
-        if (inputPlayer == null)
-            return true;
-        
         // Make sure this part only runs when coming in from a FA button up moment
-        if (!inputPlayer.GetButtonUp("Flight Assist") || !inputPlayer.GetButton("Axis Modifier") ||
-            !HasSwivelSystem(__instance))
+        if (inputPlayer == null || !inputPlayer.GetButtonUp("Flight Assist") || !inputPlayer.GetButton("Axis Modifier"))
             return true;
         
-        ToggleManualSwivel(__instance);
-        
-        return false;
+        return !TrySetManualSwivel(__instance);
     }
     
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerThrottleAxis1Controls))]
@@ -280,10 +291,80 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         if (!customAxisChanged && !modifierPressedWithThrottle && !modifierThrottleChanged)
             return;
         
-        if (!HasSwivelSystem(aircraft))
+        TrySetManualSwivel(aircraft, true);
+    }
+    
+    [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerControls))]
+    [HarmonyPrefix]
+    private static void PlayerControlsPrefix(PilotPlayerState __instance)
+    {
+        if (!_enableLongPressToggle.Value || !GameManager.flightControlsEnabled || __instance.pilotStrength < 0.2f)
             return;
         
-        ToggleManualSwivel(aircraft, true);
+        var inputButtonName = GetLongPressInputName();
+        
+        // In case it's set to night vision which returns a null
+        if (inputButtonName == null)
+            return;
+        
+        var inputPlayer = __instance.player;
+        
+        if (inputPlayer == null || !inputPlayer.GetButtonTimedPressDown(inputButtonName, PlayerSettings.pressDelay))
+            return;
+        
+        TrySetManualSwivel(__instance.pilot?.aircraft);
+    }
+    
+    [HarmonyPatch(typeof(NightVision), nameof(NightVision.Update))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> NightVisionUpdateTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        var matcher = new CodeMatcher(instructions);
+        
+        var getButtonDown =
+            AccessTools.Method(typeof(Rewired.Player), nameof(Rewired.Player.GetButtonDown), [typeof(string)]);
+        var replacementMethod = AccessTools.Method(typeof(ManualEngineSwivelFix), nameof(HandleNightVisionInput));
+        
+        matcher.MatchForward(true,
+            new CodeMatch(OpCodes.Ldstr, "Night Vis"),
+            new CodeMatch(ci => ci.Calls(getButtonDown))
+        ).ThrowIfInvalid("Couldn't find NightVision.cs pattern.");
+        
+        matcher.SetInstruction(new CodeInstruction(OpCodes.Call, replacementMethod));
+        
+        return matcher.InstructionEnumeration();
+    }
+    
+    private static bool HandleNightVisionInput(Rewired.Player inputPlayer, string inputName)
+    {
+        // Vanilla behaviour when off / not set to use NV as long press
+        if (!_enableLongPressToggle.Value || _longPressToggleInput.Value != LongPressToggleInput.NightVision)
+            return inputPlayer.GetButtonDown(inputName);
+        
+        // Short press still toggles NV
+        if (inputPlayer.GetButtonTimedPressUp(inputName, 0f, PlayerSettings.clickDelay))
+            return true;
+        
+        // Long press instead toggles engine vectoring
+        if (!inputPlayer.GetButtonTimedPressDown(inputName, PlayerSettings.pressDelay))
+            return false;
+        
+        if (GameManager.GetLocalAircraft(out var aircraft))
+            TrySetManualSwivel(aircraft);
+        
+        return false;
+    }
+    
+    private static string? GetLongPressInputName()
+    {
+        return _longPressToggleInput.Value switch
+        {
+            LongPressToggleInput.Radar => "Radar",
+            LongPressToggleInput.LinkGuns => "Link Guns",
+            LongPressToggleInput.NavLights => "Nav Lights",
+            // Night vision is in NightVision.Update
+            _ => null
+        };
     }
     
     private static bool HasSwivelSystem(Aircraft aircraft) =>
@@ -294,5 +375,13 @@ internal class ManualEngineSwivelFix : ConfigurableFix
     {
         public bool Changed;
         public float OriginalMinSpeed;
+    }
+    
+    private enum LongPressToggleInput
+    {
+        Radar,
+        NightVision,
+        LinkGuns,
+        NavLights
     }
 }

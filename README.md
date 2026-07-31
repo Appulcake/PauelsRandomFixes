@@ -82,6 +82,10 @@ Manager's in game GUI (F1 to open by default).
 > where player points it, unless specifically toggled back to auto mode.
 > <br><br>Toggle by holding "Axis Modifier" and press "Toggle Flight Assist" (this will only toggle engine vectoring mode, 
 > not flight assist itself, to allow toggling FA and engine vector mode separately).
+> <br><br>Additionally, a second toggle bind can be enabled with "Enable Long Press Toggle Hotkey", which turns on the chosen 
+> "Long Press Toggle Hotkey" (by default Radar) to toggle engine vectoring mode on a long press. The short press of such a 
+> chosen action remains the same. E.g. if this is enabled and set to Radar, a short press on "Toggle Radar" key toggles Radar, 
+> and a long press on this same key toggles engine vectoring instead.
 > <br><br>Optionally, you can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to manual 
 > vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first (both enabled 
 > by default).

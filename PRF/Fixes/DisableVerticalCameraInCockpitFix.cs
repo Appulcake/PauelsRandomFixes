@@ -10,7 +10,7 @@ namespace PRF.Fixes;
 [HarmonyPatch]
 internal class DisableVerticalCameraInCockpitFix(ConfigFile config) : ConfigurableFix(config)
 {
-    protected override string Description => 
+    protected override string Description =>
         "When enabled, prevents cockpit camera from moving vertically with vertical camera movement keys.";
     
     [HarmonyPatch(typeof(CameraCockpitState), nameof(CameraCockpitState.UpdateState))]
