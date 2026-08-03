@@ -7,8 +7,8 @@
         <RootNamespace>PRF</RootNamespace>
         <PackageId>Pauel3312.PRF</PackageId>
         <Title>PauelsRandomNuclearOptionFixes</Title>
-        <Description>A mod containing all the bugfixing I do for shockfront.</Description>
-        <Version>0.34.0.0</Version>
+        <Description>A mod containing all the bugfixing we do for shockfront.</Description>
+        <Version>0.34.1.0</Version>
         <Authors>Pauel3312;Appulcake</Authors>
         <PackageTags>nuclear;option;bepinex</PackageTags>
 

@@ -145,7 +145,8 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
     }
     
     // Redirect ArmorPenetrate linecast to existing LinecastIgnoringOwner
-    private static bool LinecastIgnoringDealer(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask, PersistentID dealerID)
+    private static bool LinecastIgnoringDealer(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask,
+        PersistentID dealerID)
     {
         Unit? owner = null;
         
