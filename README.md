@@ -16,8 +16,13 @@ Manager's in game GUI (F1 to open by default).
 #### BlueprinterServerFix
 > Prevents Blueprinter's prefabHash collision reassignments from being cleaned up before full game load on dedicated 
 > servers, fixing various prefab mix-up issues with too many content mods (e.g. swapped turret vs chassis, wrong container 
-> types spawned).Does nothing without Blueprinter present.
-> <br><br>Required on server and client, on by default.
+> types spawned). Does nothing without Blueprinter present.
+> <br><br>Required on server and client, off by default.
+---
+#### BombTrajectoryFix
+> Restores pre 0.34 climbing trajectory for bombs, preventing their excessive overshoot and newly introduced inaccuracy 
+> before terminal guidance phase.
+> <br><br>Server only, on by default.
 ---
 #### BrakeAsAxis
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With 
@@ -25,6 +30,10 @@ Manager's in game GUI (F1 to open by default).
 > Has a configuration whether to use negative region of bound axis, which needs to match whether your physical axis bind 
 > has one or not.
 > <br><br>Client only, off by default (to prevent unexpected braking behaviour when negative region is set up wrong).
+---
+#### ChaseCameraNREFix
+> Fixes an NRE causing UI to break when aircraft is destroyed while in Chase Camera.
+> <br><br> Client only, on by default.
 ---
 #### ClickthroughChatbox
 > Fixes allowing being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
@@ -62,6 +71,8 @@ Manager's in game GUI (F1 to open by default).
 > opening map (until closing it again). Mouse will keep functioning as normal, but for example other keyboard and gamepad
 > inputs to control the plane can still happen, and with no inputs the plane's control surfaces revert to neutral on map.
 > This is done by temporarily toggling Virtual Joystick off when map is opened, and on again (if it was on before) when closed.
+> <br><br>Additionally, allows toggling a "Spawn with VJ on option" that turns VJ on during new aircraft spawn, to help
+> work around an issue where sometimes VJ settings don't save or carry over between sessions, this is off by default.
 > <br><br>Client only, on by default (does nothing when not using Virtual Joystick).
 ---
 #### LongRangeGunServerValidatorFix
@@ -95,6 +106,7 @@ Manager's in game GUI (F1 to open by default).
 ---
 #### RemoveTagsInTTS
 > Prevents TTS from reading out HTML tags in messages.
+> <br><br>Also allows customising regex blacklist of what to strip (by default <> and [] tags are removed).
 > <br><br>Client only, on by default.
 ---
 #### RequireFreelookWithoutVJ
