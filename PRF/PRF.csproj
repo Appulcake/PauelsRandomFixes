@@ -46,6 +46,10 @@
         <DefineConstants>$(DefineConstants);CLIENT</DefineConstants>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' == 'Server'">
+        <AssemblyName>$(AssemblyName).Server</AssemblyName>
+    </PropertyGroup>
+
     <!-- BepInEx Package References -->
     <ItemGroup>
         <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" ExcludeAssets="runtime"/>
