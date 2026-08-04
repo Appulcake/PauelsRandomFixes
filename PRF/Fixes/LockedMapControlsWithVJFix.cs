@@ -13,9 +13,9 @@ internal class LockedMapControlsWithVJFix : ConfigurableFix
     private static ConfigEntry<bool> _spawnWithVJOn = null!;
     public LockedMapControlsWithVJFix(ConfigFile config) : base(config)
     {
-        _spawnWithVJOn = config.Bind(GetType().Name, "Spawn with VJ on", true,
+        _spawnWithVJOn = config.Bind(GetType().Name, "Spawn with VJ on", false,
             "This'll make sure VJ starts on when spawning into a plane, prevents issues with " +
-            "VJ preferences not saving/carrying over from a previous session and starting off.");
+            "VJ preferences not saving/carrying over from a previous session.");
     }
     
     protected override string Description =>
