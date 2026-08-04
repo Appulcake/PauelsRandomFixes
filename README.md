@@ -16,8 +16,13 @@ Manager's in game GUI (F1 to open by default).
 #### BlueprinterServerFix
 > Prevents Blueprinter's prefabHash collision reassignments from being cleaned up before full game load on dedicated 
 > servers, fixing various prefab mix-up issues with too many content mods (e.g. swapped turret vs chassis, wrong container 
-> types spawned).Does nothing without Blueprinter present.
-> <br><br>Required on server and client, on by default.
+> types spawned). Does nothing without Blueprinter present.
+> <br><br>Required on server and client, off by default.
+---
+#### BombTrajectoryFix
+> Restores pre 0.34 climbing trajectory for bombs, preventing their excessive overshoot and newly introduced inaccuracy 
+> before terminal guidance phase.
+> <br><br>Server only, on by default.
 ---
 #### BrakeAsAxis
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With 
@@ -26,8 +31,18 @@ Manager's in game GUI (F1 to open by default).
 > has one or not.
 > <br><br>Client only, off by default (to prevent unexpected braking behaviour when negative region is set up wrong).
 ---
+#### ChaseCameraNREFix
+> Fixes an NRE causing UI to break when aircraft is destroyed while in Chase Camera.
+> <br><br> Client only, on by default.
+---
 #### ClickthroughChatbox
 > Fixes allowing being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
+> <br><br>Client only, on by default.
+---
+#### DisableVerticalCameraInCockpitFix
+> When enabled, prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical", 
+> "Move Up", "Move Down"). Functionality in Free camera and Editor stays the same, only reverting this 0.34 change for 
+> cockpit camera.
 > <br><br>Client only, on by default.
 ---
 #### FPSBoundMouseFix
@@ -56,6 +71,8 @@ Manager's in game GUI (F1 to open by default).
 > opening map (until closing it again). Mouse will keep functioning as normal, but for example other keyboard and gamepad
 > inputs to control the plane can still happen, and with no inputs the plane's control surfaces revert to neutral on map.
 > This is done by temporarily toggling Virtual Joystick off when map is opened, and on again (if it was on before) when closed.
+> <br><br>Additionally, allows toggling a "Spawn with VJ on option" that turns VJ on during new aircraft spawn, to help
+> work around an issue where sometimes VJ settings don't save or carry over between sessions, this is off by default.
 > <br><br>Client only, on by default (does nothing when not using Virtual Joystick).
 ---
 #### LongRangeGunServerValidatorFix
@@ -70,8 +87,26 @@ Manager's in game GUI (F1 to open by default).
 > while this one is only active as long as you hold the bind down, to easier temporarily look at your target.
 > <br><br>Client only, on by default.
 ---
+#### ManualEngineSwivelFix
+> When enabled, allows overriding engine swivel system to be toggled between auto vs fully manual, without the game trying 
+> to be "smart" about it and change engine vector whenever it feels like it. In manual mode, the swivel will always stay 
+> where player points it, unless specifically toggled back to auto mode.
+> <br><br>Toggle by holding "Axis Modifier" and press "Toggle Flight Assist" (this will only toggle engine vectoring mode, 
+> not flight assist itself, to allow toggling FA and engine vector mode separately).
+> <br><br>Additionally, a second toggle bind can be enabled with "Enable Long Press Toggle Hotkey", which turns on the chosen 
+> "Long Press Toggle Hotkey" (by default Radar) to toggle engine vectoring mode on a long press. The short press of such a 
+> chosen action remains the same. E.g. if this is enabled and set to Radar, a short press on "Toggle Radar" key toggles Radar, 
+> and a long press on this same key toggles engine vectoring instead.
+> <br><br>Optionally, you can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to manual 
+> vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first (both enabled 
+> by default).
+> <br><br>This engine vectoring fix is applicable to both swivel duct system (Vagrant, Medusa), and ducted thrust system 
+> craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep (e.g. Alkyon).
+> <br><br>Client only, off by default.
+---
 #### RemoveTagsInTTS
 > Prevents TTS from reading out HTML tags in messages.
+> <br><br>Also allows customising regex blacklist of what to strip (by default <> and [] tags are removed).
 > <br><br>Client only, on by default.
 ---
 #### RequireFreelookWithoutVJ
@@ -79,8 +114,16 @@ Manager's in game GUI (F1 to open by default).
 > Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
 ---
+#### TargetDesignatorFix
+> Fixes Target Designator indicator on center of screen inconsistently showing depending on weapon selected, and not 
+> properly updating on gear-up state until weapons are swapped.
+> <br><br>Supports configuring to make sure the icon is always on regardless of gear/safety (on by default), and to 
+> fade out the icon when safety is on (off by default, configurable fade-out opacity).
+> <br><br>Client only, on by default.
+---
 #### ThrottleRelativeVelocity
 > Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary, fixed 
 > rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
+> <br>Also works when changing Custom Axis with throttle when holding "Axis Modifier" key.
 > <br><br>Not relevant (or active) if you don't have Relative Throttle on in Controls settings (i.e. when using a physical 
 > throttle slider).

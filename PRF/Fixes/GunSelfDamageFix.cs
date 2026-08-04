@@ -33,6 +33,10 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         AccessTools.Method(typeof(GunSelfDamageFix), nameof(LaserLinecastIgnoringOwner))
         ?? throw new MissingMethodException("Could not find LaserLinecastIgnoringOwner.");
     
+    private static readonly MethodInfo ArmorPenetrationFilteredLinecast =
+        AccessTools.Method(typeof(GunSelfDamageFix), nameof(LinecastIgnoringDealer))
+        ?? throw new MissingMethodException("Could not find LinecastIgnoringDealer.");
+    
     protected override string Description =>
         "Fixes the possibility of fired bullets and lasers impacting the owner's plane." +
         " This can especially happen when on a server with high ping, in certain planes" +
@@ -106,6 +110,54 @@ internal sealed class GunSelfDamageFix(ConfigFile config) : ConfigurableFix(conf
         matcher.Instruction.operand = LaserFilteredLinecast;
         
         return matcher.InstructionEnumeration();
+    }
+    
+    // Server sided patch for follow-up penetration traces
+    // A bullet impact on a (nearby) damageable part can cause ArmorPenetrate's linecast to hit the firing unit
+    // (possible inaccuracy in the linecast/hitbox geometry? can happen in single player too with e.g. Ibis door gunner)
+    [HarmonyPatch(typeof(DamageEffects), nameof(DamageEffects.ArmorPenetrate))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ArmorPenetrateTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        var matcher = new CodeMatcher(instructions);
+        
+        matcher
+            .MatchForward(
+                false,
+                new CodeMatch(instruction => instruction.Calls(PhysicsLinecast)))
+            .ThrowIfInvalid("Could not find the DamageEffects.ArmorPenetrate Linecast.");
+        
+        // Physics.Linecast has these arguments:
+        //
+        // Vector3 start
+        // Vector3 end
+        // out RaycastHit hitInfo
+        // int layerMask
+        //
+        // DamageEffects.ArmorPenetrate argument 5 is dealerID
+        matcher.InsertAndAdvance(new CodeInstruction(OpCodes.Ldarg_S, (byte)5));
+        
+        // Redirect linecast to own filtered method
+        matcher.Instruction.opcode = OpCodes.Call;
+        matcher.Instruction.operand = ArmorPenetrationFilteredLinecast;
+        
+        return matcher.InstructionEnumeration();
+    }
+    
+    // Redirect ArmorPenetrate linecast to existing LinecastIgnoringOwner
+    private static bool LinecastIgnoringDealer(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask,
+        PersistentID dealerID)
+    {
+        Unit? owner = null;
+        
+#pragma warning disable Harmony003
+        if (!dealerID.Equals(PersistentID.None))
+        {
+            dealerID.TryGetUnit(out owner);
+#pragma warning restore Harmony003
+        }
+        
+        return LinecastIgnoringOwner(start, end, out hitInfo, layerMask, owner);
     }
     
     private static bool LinecastIgnoringOwner(Vector3 start, Vector3 end, out RaycastHit hitInfo, int layerMask,

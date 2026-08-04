@@ -29,7 +29,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
     public FPSBoundMouseFix(ConfigFile config) : base(config)
     {
         _enableCenteringDuringFreelook = config.Bind(GetType().Name + " - Misc", "Enable Centering VJ During Freelook",
-            false,
+            true,
             "Enable centering force to act on Virtual Joystick while freelook is active (instead of freezing last input)");
         
         _cockpitFreelookSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Cockpit Freelook Sensitivity", 1f,

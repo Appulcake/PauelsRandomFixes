@@ -7,8 +7,8 @@
         <RootNamespace>PRF</RootNamespace>
         <PackageId>Pauel3312.PRF</PackageId>
         <Title>PauelsRandomNuclearOptionFixes</Title>
-        <Description>A mod containing all the bugfixing I do for shockfront.</Description>
-        <Version>0.34.0.0</Version>
+        <Description>A mod containing all the bugfixing we do for shockfront.</Description>
+        <Version>0.34.1.0</Version>
         <Authors>Pauel3312;Appulcake</Authors>
         <PackageTags>nuclear;option;bepinex</PackageTags>
 
@@ -72,6 +72,7 @@
         <Reference Include="UnityEngine.PhysicsModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.Rendering.Universal" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\Unity.RenderPipelines.Universal.Runtime.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.UI" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UI.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.UIModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.UIModule.dll" Private="False" Publicize="True"/>
         <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\com.rlabrecque.steamworks.net.dll" Private="False" Publicize="True"/>
     </ItemGroup>
 

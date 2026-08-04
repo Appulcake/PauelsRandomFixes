@@ -17,6 +17,8 @@ internal class BlueprinterServerFix(ConfigFile config) : ConfigurableFix(config)
 {
     private static readonly Dictionary<int, NetworkIdentity> SavedNetworkIdentities = new();
     
+    protected override bool DefaultEnabled => false;
+    
     protected override string Description =>
         $"{base.Description}\nFixes Blueprinter's prefabHash reassignments from being reset/cleaned up before full game load is complete, fixing various prefab mix-up issues with too many BP content mods.";
     
