@@ -8,16 +8,24 @@ namespace PRF.Fixes;
 
 [Fix]
 [HarmonyPatch(typeof(DynamicMap))]
-internal class LockedMapControlsWithVJFix(ConfigFile config) : ConfigurableFix(config)
+internal class LockedMapControlsWithVJFix : ConfigurableFix
 {
+    private static ConfigEntry<bool> _spawnWithVJOn = null!;
+    public LockedMapControlsWithVJFix(ConfigFile config) : base(config)
+    {
+        _spawnWithVJOn = config.Bind(GetType().Name, "Spawn with VJ on", true,
+            "This'll make sure VJ starts on when spawning into a plane, prevents issues with " +
+            "VJ preferences not saving/carrying over from a previous session and starting off.");
+    }
+    
+    protected override string Description =>
+        $"{base.Description}\nFixes locked and stuck controls with map open when Virtual Joystick is enabled.";
+    
     // Track whether we turned it off or not, to cover edge case of:
     //  VJ is off => player opens map => manually turns VJ on in settings => closes map, make sure it stays on
     // Instead of tracking what it was on map open and returning it to the off state on close
     // (which would ignore player turning it on during map open)
     private static bool _wasTurnedOffByMap;
-    
-    protected override string Description =>
-        $"{base.Description}\nFixes locked and stuck controls with map open when Virtual Joystick is enabled.";
     
     private static void ToggleVJ(bool enabled)
     {
@@ -50,5 +58,17 @@ internal class LockedMapControlsWithVJFix(ConfigFile config) : ConfigurableFix(c
         
         _wasTurnedOffByMap = false;
         ToggleVJ(true);
+    }
+    
+    [HarmonyPatch(typeof(Pilot), nameof(Pilot.Pilot_OnInitialize))]
+    [HarmonyPostfix]
+    private static void Pilot_OnInitializePostfix(Pilot __instance)
+    {
+        if (_spawnWithVJOn.Value && !(__instance.aircraft.pilots[0] != __instance) && GameManager.gameState != GameState.Editor &&
+            GameManager.gameState != GameState.Encyclopedia && __instance.player != null && GameManager.IsLocalPlayer(__instance.player))
+        {
+            _wasTurnedOffByMap = false;
+            ToggleVJ(true);
+        }
     }
 }
