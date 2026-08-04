@@ -1,3 +1,4 @@
+#if CLIENT
 using System;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
@@ -15,7 +16,7 @@ internal class RemoveTagsInTTS : ConfigurableFix
     
     private static ConfigEntry<string> _removeRegex = null!;
     
-    private static Regex _ttsFormattingRegex = new(DefaultPattern, RegexOptions.Compiled);
+    private static Regex _ttsFormattingRegex = null!;
     
     public RemoveTagsInTTS(ConfigFile config) : base(config)
     {
@@ -55,3 +56,4 @@ internal class RemoveTagsInTTS : ConfigurableFix
         message = regex.Replace(message, string.Empty);
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if CLIENT
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using BepInEx.Configuration;
@@ -63,3 +64,4 @@ internal class RequireFreelookWithoutVJ(ConfigFile config) : ConfigurableFix(con
         }
     }
 }
+#endif

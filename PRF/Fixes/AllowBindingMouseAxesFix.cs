@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using Rewired.UI.ControlMapper;
@@ -19,3 +20,4 @@ internal class AllowBindingMouseAxesFix(ConfigFile config) : ConfigurableFix(con
         __instance.ignoreMouseYAxisAssignment = false;
     }
 }
+#endif

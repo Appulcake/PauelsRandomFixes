@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine.UI;
@@ -24,3 +25,4 @@ internal class ClickthroughChatbox(ConfigFile config) : ConfigurableFix(config)
             image.raycastTarget = false;
     }
 }
+#endif

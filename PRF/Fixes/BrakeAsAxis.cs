@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 
@@ -30,3 +31,4 @@ internal class BrakeAsAxis : ConfigurableFix
             __instance.controlInputs.brake = __instance.player.GetAxisRaw("Brake");
     }
 }
+#endif

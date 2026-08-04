@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine.Rendering;
@@ -39,3 +40,4 @@ internal class ChaseCameraNreFix(ConfigFile config) : ConfigurableFix(config)
         return false;
     }
 }
+#endif

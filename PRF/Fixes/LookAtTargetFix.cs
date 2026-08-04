@@ -1,3 +1,4 @@
+#if CLIENT
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using BepInEx.Configuration;
@@ -73,3 +74,4 @@ internal class LookAtTargetFix(ConfigFile config) : ConfigurableFix(config)
         __instance.tiltView = 0f;
     }
 }
+#endif

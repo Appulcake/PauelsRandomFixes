@@ -1,0 +1,4 @@
+# Apply only to files in the obj directory (where BepInEx generates files)
+[obj/**]
+# noinspection EditorConfigKeyCorrectness
+dotnet_diagnostic.CS1591.severity = none

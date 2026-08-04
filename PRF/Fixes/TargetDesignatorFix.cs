@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -86,3 +87,4 @@ internal class TargetDesignatorFix : ConfigurableFix
         _opacityGroup.blocksRaycasts = false;
     }
 }
+#endif

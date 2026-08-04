@@ -37,7 +37,13 @@
         <NoWarn>$(NoWarn);CS0436</NoWarn>
 
         <!-- Mod Destination -->
-        <ModDestination>$(NUCLEAR_OPTION_SERVER_REFERENCES)\..\..\BepInEx\plugins</ModDestination>
+        <ModDestination>$(NUCLEAR_OPTION_SERVER_REFERENCES)\..\..\BepInEx\plugins\$(Configuration)</ModDestination>
+        <Configurations>Debug;Release;Server</Configurations>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration)' != 'Server'">
+        <DefineConstants>$(DefineConstants);CLIENT</DefineConstants>
     </PropertyGroup>
 
     <!-- BepInEx Package References -->

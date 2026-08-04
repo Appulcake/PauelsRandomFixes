@@ -1,3 +1,4 @@
+#if CLIENT
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using BepInEx.Configuration;
@@ -47,3 +48,4 @@ internal class DisableVerticalCameraInCockpitFix(ConfigFile config) : Configurab
         return matcher.InstructionEnumeration();
     }
 }
+#endif

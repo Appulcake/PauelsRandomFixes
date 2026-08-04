@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -72,3 +73,4 @@ internal class LockedMapControlsWithVJFix : ConfigurableFix
         }
     }
 }
+#endif

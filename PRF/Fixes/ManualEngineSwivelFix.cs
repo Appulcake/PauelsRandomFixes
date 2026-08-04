@@ -1,3 +1,4 @@
+#if CLIENT
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using BepInEx.Configuration;
@@ -385,3 +386,4 @@ internal class ManualEngineSwivelFix : ConfigurableFix
         NavLights
     }
 }
+#endif

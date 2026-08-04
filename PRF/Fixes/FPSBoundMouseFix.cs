@@ -1,3 +1,4 @@
+#if CLIENT
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -522,3 +523,4 @@ internal class FPSBoundMouseFix : ConfigurableFix
             AccessTools.PropertyGetter(typeof(Time), nameof(Time.unscaledDeltaTime));
     }
 }
+#endif

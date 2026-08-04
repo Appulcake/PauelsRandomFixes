@@ -1,3 +1,4 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -71,3 +72,4 @@ internal class ThrottleRelativeVelocity : ConfigurableFix
         return false;
     }
 }
+#endif
