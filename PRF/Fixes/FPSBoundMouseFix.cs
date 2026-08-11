@@ -387,6 +387,9 @@ internal class FPSBoundMouseFix : ConfigurableFix
     [HarmonyPostfix]
     public static void UpdateStateAddition(Pilot pilot, ref PilotPlayerState __instance)
     {
+        if (LockedMapControlsWithVJFix._freezeVJOnMapOpen.Value && DynamicMap.mapMaximized)
+            return;
+        
         if (PlayerSettings.virtualJoystickEnabled && !__instance.player.GetButton("Free Look"))
         {
             var num = PlayerSettings.virtualJoystickInvertPitch ? -1f : 1f;
@@ -419,21 +422,6 @@ internal class FPSBoundMouseFix : ConfigurableFix
         }
     }
     
-    [HarmonyPatch(typeof(LeaderboardMenu), nameof(LeaderboardMenu.Close))]
-    [HarmonyPostfix]
-    public static void OnLeaderboardClosePostfix()
-    {
-        // Re-center VJ on escape menu close, as the PilotPlayerState don't seem to run during that but the mouse movements are still recorded
-        // which'd cause VJ to move on escape menu close based on recent mouse movement in escape menu
-        if (PlayerSettings.virtualJoystickEnabled &&
-            SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
-        {
-            _globalJoystickPos = Vector3.zero;
-            SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
-        }
-    }
-    
-    
     // PlayerAxisControls no longer sets its joystickPos and instead gets that data via _globalJoystickPos from UpdateState
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerAxisControls))]
     [HarmonyPrefix]
@@ -441,6 +429,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
     {
         if (__instance.pilot.aircraft.cockpit.IsDetached())
             return false;
+        
         // Moved to UpdateState:
         // float num = PlayerSettings.virtualJoystickInvertPitch ? -1f : 1f;
         if (PlayerSettings.virtualJoystickEnabled && (DynamicMap.mapMaximized || RadialMenuMain.IsInUse()))
@@ -449,7 +438,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
             __instance.controlInputs.roll = Mathf.Clamp(__instance.rollInput, -1f, 1f);
             __instance.controlInputs.yaw = Mathf.Clamp(__instance.yawInput, -1f, 1f);
         }
-        else if (__instance.pilotStrength < 0.2)
+        else if (__instance.pilotStrength < 0.2f)
         {
             __instance.controlInputs.pitch = 0.0f;
             __instance.controlInputs.roll = 0.0f;
@@ -479,25 +468,32 @@ internal class FPSBoundMouseFix : ConfigurableFix
                     // (which'd add another layer of deltaTime based on physics FPS)
                 
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
-                else if
-                    (_enableCenteringDuringFreelook
-                     .Value) // Enable centering to continue happening during freelook with config enabled
+                
+                // Enable centering to continue happening during freelook with config enabled
+                else if (_enableCenteringDuringFreelook.Value) 
                     SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
+                
                 if (!DynamicMap.mapMaximized && !RadialMenuMain.IsInUse() && !LeaderboardMenu.IsOpen())
                 {
-                    __instance.pitchInput =
-                        (float)(-(double)SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.y /
-                                150.0);
-                    __instance.rollInput =
-                        SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.x / 150f;
-                    if (__instance.pilot.aircraft.radarAlt < __instance.pilot.aircraft.definition.spawnOffset.y + 1.0)
-                        __instance.yawInput = SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.x /
-                                              150f;
+                    __instance.pitchInput = -SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.y / 150f;
+                    __instance.rollInput = SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.x / 150f;
+                    
+                    if (__instance.pilot.aircraft.radarAlt < __instance.pilot.aircraft.definition.spawnOffset.y + 1f)
+                        __instance.yawInput = SceneSingleton<FlightHud>.i.virtualJoystickPos.transform.localPosition.x / 150f;
                 }
             }
             else if (SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
             {
                 SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.SetActive(false);
+            }
+            
+            if (LockedMapControlsWithVJFix._wasTurnedOffByMap && LockedMapControlsWithVJFix._freezeVJOnMapOpen.Value)
+            {
+                __instance.pitchInput = -_globalJoystickPos.y / 150f;
+                __instance.rollInput = _globalJoystickPos.x / 150f;
+                
+                if (__instance.pilot.aircraft.radarAlt < __instance.pilot.aircraft.definition.spawnOffset.y + 1f)
+                    __instance.yawInput = _globalJoystickPos.x / 150f;
             }
             
             __instance.pitchInput += __instance.player.GetAxis("Pitch");
@@ -512,6 +508,20 @@ internal class FPSBoundMouseFix : ConfigurableFix
         }
         
         return false;
+    }
+    
+    [HarmonyPatch(typeof(LeaderboardMenu), nameof(LeaderboardMenu.Close))]
+    [HarmonyPostfix]
+    public static void OnLeaderboardClosePostfix()
+    {
+        // Re-center VJ on escape menu close, as the PilotPlayerState don't seem to run during that but the mouse movements are still recorded
+        // which'd cause VJ to move on escape menu close based on recent mouse movement in escape menu
+        if (PlayerSettings.virtualJoystickEnabled &&
+            SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
+        {
+            _globalJoystickPos = Vector3.zero;
+            SceneSingleton<FlightHud>.i.SetVirtualJoystick(_globalJoystickPos);
+        }
     }
     
     private static class ReusedRefs

@@ -12,11 +12,16 @@ namespace PRF.Fixes;
 internal class LockedMapControlsWithVJFix : ConfigurableFix
 {
     private static ConfigEntry<bool> _spawnWithVJOn = null!;
+    public static ConfigEntry<bool> _freezeVJOnMapOpen = null!;
     public LockedMapControlsWithVJFix(ConfigFile config) : base(config)
     {
         _spawnWithVJOn = config.Bind(GetType().Name, "Spawn with VJ on", false,
             "This'll make sure VJ starts on when spawning into a plane, prevents issues with " +
             "VJ preferences not saving/carrying over from a previous session.");
+        
+        _freezeVJOnMapOpen = config.Bind(GetType().Name, "Freeze VJ when map is open", false,
+            "This'll lock last VJ input when map is open, continuing last VJ input until map is closed" + 
+            " (other control inputs still work during this, just VJ stays active without centering).");
     }
     
     protected override string Description =>
@@ -26,7 +31,7 @@ internal class LockedMapControlsWithVJFix : ConfigurableFix
     //  VJ is off => player opens map => manually turns VJ on in settings => closes map, make sure it stays on
     // Instead of tracking what it was on map open and returning it to the off state on close
     // (which would ignore player turning it on during map open)
-    private static bool _wasTurnedOffByMap;
+    public static bool _wasTurnedOffByMap;
     
     private static void ToggleVJ(bool enabled)
     {
