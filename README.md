@@ -46,15 +46,16 @@ Manager's in game GUI (F1 to open by default).
 > <br><br>Client only, on by default.
 ---
 #### FPSBoundMouseFix
-> Fixes the game double applying deltaTime to various mouse axis binds (e.g. using mouse for Free Look, Virtual Joystick, 
-> Map panning), causing mouse input sensitivity to be inversely proportional to FPS (higher FPS = slower mouse).<br><br>
-> Extensive configurable sensitivities for various mouse inputs, including separate X and Y sensitivity for Virtual Joystick. 
-> These stack with vanilla game settings. Also includes an option to allow Centering Force to keep acting on Virtual Joystick 
-> when using Free Look (normally in vanilla, when holding Free Look your last Virtual Joystick state is frozen).<br><br>
-> Because currently the game doesn't distinguish which controller axes an action came from, with this enabled controller 
-> axis inputs for Free Look will no longer account for FPS, thus their sensitivity becoming proportional to FPS 
-> (higher FPS = faster joystick input).
-> <br><br>Client only, off by default.
+> Fixed the game incorrectly interpreting various axis reads that are commonly used for mouse input to be considered absolute, 
+> while mouse input is relative, and erroneously applying additional deltaTime multipliers to them, causing these inputs 
+> (used for things like free look, virtual joystick, map panning) to be more sensitive with lower FPS.
+> <br>New rewrite on this fix properly distinguishes input sources between relative and absolute, meaning it can be on without 
+> affecting gamepad/absolute input sources.
+> <br><br> Extensive configurable sensitivities for various mouse inputs, including separate X and Y sensitivity for Virtual 
+> Joystick. These stack with vanilla game settings, and allow for additional fine control.<br>
+> Also includes an option to allow Centering Force to keep acting on 
+> Virtual Joystick when using Free Look (normally in vanilla, when holding Free Look your last Virtual Joystick state is frozen).
+> <br><br>Client only, on by default.
 ---
 #### GunSelfDamageFix
 > Fixes fired bullets and lasers sometimes hitting owner's plane, by preventing those being able to collide with the owner.
@@ -70,10 +71,12 @@ Manager's in game GUI (F1 to open by default).
 > Fixes all plane control inputs being both prevented and stuck on their last state when using Virtual Joystick and 
 > opening map (until closing it again). Mouse will keep functioning as normal, but for example other keyboard and gamepad
 > inputs to control the plane can still happen, and with no inputs the plane's control surfaces revert to neutral on map.
-> This is done by temporarily toggling Virtual Joystick off when map is opened, and on again (if it was on before) when closed.
-> <br><br>Additionally, allows toggling a "Spawn with VJ on option" that turns VJ on during new aircraft spawn, to help
-> work around an issue where sometimes VJ settings don't save or carry over between sessions, this is off by default.
-> <br><br>Client only, on by default (does nothing when not using Virtual Joystick).
+> <br><br>Additionally, contains two sub-options (both of these are off by default):
+> - Option to Freeze VJ's input while map is open (in this state, the current VJ position is retained on map continuing input, 
+> but other inputs from e.g. keyboard/controller are still allowed that stack with this) 
+> - Option to Restore VJ's position to where it was when map is closed
+> 
+> Client only, on by default (does nothing when not using Virtual Joystick).
 ---
 #### LongRangeGunServerValidatorFix
 > Fixes server rejecting client player bullet impact calls from shots further than 3000m away (game has a hardcoded 3000m 
@@ -83,7 +86,7 @@ Manager's in game GUI (F1 to open by default).
 ---
 #### LookAtTargetFix
 > Allows holding "Look At Target" keybind in first person (cockpit) camera to point target to a target, snaps back to center
-> when released. Similar to what "Center View" does with Gameplay Settings => Target Padlock on, but that one is a toggle,
+> when released. Similar to what "Center View" does with Gameplay Settings ⇒ Target Padlock on, but that one is a toggle,
 > while this one is only active as long as you hold the bind down, to easier temporarily look at your target.
 > <br><br>Client only, on by default.
 ---
@@ -110,7 +113,7 @@ Manager's in game GUI (F1 to open by default).
 > <br><br>Client only, on by default.
 ---
 #### RequireFreelookWithoutVJ
-> Enabled needing to hold down Free Look button to activate Free Look, even when Virtual Joystick is disabled. While using 
+> Enables needing to hold down Free Look button to activate Free Look, even when Virtual Joystick is disabled. While using 
 > Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
 ---

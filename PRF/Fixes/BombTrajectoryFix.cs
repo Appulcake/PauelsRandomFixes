@@ -8,7 +8,7 @@ namespace PRF.Fixes;
 internal class BombTrajectoryFix(ConfigFile config) : ConfigurableFix(config)
 {
     protected override string Description =>
-        $"{base.Description}\nRestores pre 0.34 climbing trajectory for bombs, preventing their large overshoot and" + 
+        $"{base.Description}\nRestores pre 0.34 climbing trajectory for bombs, preventing their large overshoot and" +
         " newly introduced inaccuracy before terminal guidance phase.";
     
     [HarmonyPatch(typeof(Kinematics), nameof(Kinematics.GetBallisticAimPoint))]
