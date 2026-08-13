@@ -59,7 +59,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
         + " on FPS. Does not affect controller/absolute input methods.";
     
     private static float GetCockpitFreelookSensitivity() => _cockpitFreelookSensitivity.Value * 0.5f;
-    public static float GetMapPanSensitivity() => _mapPanSensitivity.Value * 20.875f;
+    public static float GetMapPanSensitivity() => _mapPanSensitivity.Value * 41.6665f; // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
     public static float GetOrbitCamSensitivity() => _orbitCamSensitivity.Value * 0.5f;
     public static float GetOrbitZoomSensitivity() => _orbitZoomSensitivity.Value;
     public static float GetTVCamSensitivity() => _TVCamSensitivity.Value * 0.01f;

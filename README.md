@@ -19,21 +19,12 @@ Manager's in game GUI (F1 to open by default).
 > types spawned). Does nothing without Blueprinter present.
 > <br><br>Required on server and client, off by default.
 ---
-#### BombTrajectoryFix
-> Restores pre 0.34 climbing trajectory for bombs, preventing their excessive overshoot and newly introduced inaccuracy 
-> before terminal guidance phase.
-> <br><br>Server only, on by default.
----
 #### BrakeAsAxis
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With 
 > this enabled, the "Brake Axis" bind becomes properly analogue, applying proportional braking force to axis input. 
 > Has a configuration whether to use negative region of bound axis, which needs to match whether your physical axis bind 
 > has one or not.
 > <br><br>Client only, off by default (to prevent unexpected braking behaviour when negative region is set up wrong).
----
-#### ChaseCameraNREFix
-> Fixes an NRE causing UI to break when aircraft is destroyed while in Chase Camera.
-> <br><br> Client only, on by default.
 ---
 #### ClickthroughChatbox
 > Fixes allowing being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
