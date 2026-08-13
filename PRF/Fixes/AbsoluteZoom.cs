@@ -11,11 +11,14 @@ namespace PRF.Fixes;
 [HarmonyPatch]
 internal class AbsoluteZoom : ConfigurableFix
 {
+    private const string AxisName = "Zoom View";
+    
     private static ConfigEntry<float> _cockpitSensitivity = null!;
     private static ConfigEntry<float> _orbitSensitivity = null!;
     private static ConfigEntry<float> _tvSensitivity = null!;
     private static ConfigEntry<bool> _useAbsolute = null!;
     private static ConfigEntry<bool> _useNegative = null!;
+    private static ConfigEntry<bool> _invertAxis = null!;
     
     public AbsoluteZoom(ConfigFile config) : base(config)
     {
@@ -24,6 +27,9 @@ internal class AbsoluteZoom : ConfigurableFix
         
         _useNegative = config.Bind(GetType().Name, "Use Negative region", true,
             "Whether or not to use the negative region of the axis for the absolute bind. Note that the relative mode REQUIRES your device to have a negative portion.");
+        
+        _invertAxis = config.Bind(nameof(AbsoluteZoom), "Invert zoom axis", false);
+        
         _cockpitSensitivity = config.Bind(GetType().Name, "Relative Cockpit zoom sensitivity", 5f,
             new ConfigDescription(
                 "Sensitivity of the default RELATIVE zoom in cockpit view. Only works if this is set to relative mode.",
@@ -57,8 +63,7 @@ internal class AbsoluteZoom : ConfigurableFix
     public static void CockpitCamStateUpdatePostfix(CameraCockpitState __instance, ref CameraStateManager cam)
     {
         if (!_useAbsolute.Value || __instance.pilot.dead) return;
-        var input = GameManager.playerInput.GetAxis("Zoom View");
-        if (_useNegative.Value) input = (input + 1) / 2;
+        var input = GetZoomInput();
         cam.mainCamera.fieldOfView = Mathf.Lerp(__instance.minFOV, __instance.maxFOV, input);
         cam.cockpitCamRender.fieldOfView = cam.mainCamera.fieldOfView;
     }
@@ -100,8 +105,7 @@ internal class AbsoluteZoom : ConfigurableFix
     public static void AbsoluteZoomInOrbit(CameraOrbitState __instance, ref CameraStateManager cam)
     {
         if (!_useAbsolute.Value) return;
-        var input = GameManager.playerInput.GetAxis("Zoom View");
-        if (_useNegative.Value) input = (input + 1) / 2;
+        var input = GetZoomInput();
         __instance.viewDistAdjust = Mathf.Lerp(0.0f, 10.0f, input);
     }
     
@@ -114,7 +118,7 @@ internal class AbsoluteZoom : ConfigurableFix
                 false,
                 new CodeMatch(
                     OpCodes.Ldstr,
-                    "Zoom View"
+                    AxisName
                 ),
                 new CodeMatch(ci => ci.opcode == OpCodes.Call || ci.opcode == OpCodes.Callvirt)
             );
@@ -140,8 +144,7 @@ internal class AbsoluteZoom : ConfigurableFix
     public static void AbsoluteZoomTV(CameraTVState __instance, ref CameraStateManager cam)
     {
         if (!_useAbsolute.Value) return;
-        var input = GameManager.playerInput.GetAxis("Zoom View");
-        if (_useNegative.Value) input = (input + 1) / 2;
+        var input = GetZoomInput();
         cam.mainCamera.fieldOfView = Mathf.Lerp(5.0f, 80.0f, input); // This is hardcoded in the game code smh...
     }
     
@@ -154,7 +157,7 @@ internal class AbsoluteZoom : ConfigurableFix
                 false,
                 new CodeMatch(
                     OpCodes.Ldstr,
-                    "Zoom View"
+                    AxisName
                 ),
                 new CodeMatch(ci => ci.opcode == OpCodes.Call || ci.opcode == OpCodes.Callvirt)
             );
@@ -174,5 +177,23 @@ internal class AbsoluteZoom : ConfigurableFix
         
         return matcher.InstructionEnumeration();
     }
+    
+    private static float GetZoomInput()
+    {
+        var input = GameManager.playerInput.GetAxis(AxisName);
+        
+        if (_useNegative.Value)
+        {
+            input = (input + 1) / 2;
+        }
+
+        if (_invertAxis.Value)
+        {
+            input = 1f - input;
+        }
+
+        return input;
+    }
+
 }
 #endif
