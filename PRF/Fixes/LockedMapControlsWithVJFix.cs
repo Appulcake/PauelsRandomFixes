@@ -106,13 +106,9 @@ internal class LockedMapControlsWithVJFix : ConfigurableFix
         if (SceneSingleton<FlightHud>.i != null)
         {
             if (PlayerSettings.virtualJoystickEnabled && (_freezeVjOnMapOpen.Value || _restoreVjPosOnMapClose.Value))
-            {
                 SceneSingleton<FlightHud>.i.SetVirtualJoystick(_mapOpenVjPosition);
-            }
             else
-            {
                 SceneSingleton<FlightHud>.i.SetVirtualJoystick(Vector3.zero);
-            }
         }
         
         _hasMapOpenVjPosition = false;
