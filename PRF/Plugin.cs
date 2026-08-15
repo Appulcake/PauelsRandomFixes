@@ -14,21 +14,27 @@ namespace PRF;
 // ReSharper disable once InconsistentNaming
 public class PRF : BaseUnityPlugin
 {
-    internal new static ManualLogSource Logger { get; private set; } = null!;
+    /// <summary>
+    ///     PRF logger instance.
+    /// </summary>
+    public new static ManualLogSource Logger { get; private set; } = null!;
     
-    internal static List<ConfigurableFix> Fixes { get; } = [];
+    private static List<ConfigurableFix> Fixes { get; } = [];
     
     private void Awake()
     {
         Logger = base.Logger;
+    }
+    
+    private void Start()
+    {
         LoadFixes();
     }
     
     private void LoadFixes()
     {
-        var fixTypes = typeof(ConfigurableFix)
-            .Assembly
-            .GetTypes()
+        var fixTypes = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(GetTypesSafe)
             .Where(t =>
                 t is
                 {
@@ -54,10 +60,35 @@ public class PRF : BaseUnityPlugin
                 Logger.LogError($"Failed to load fix {type.Name}: {ex}");
             }
     }
+    
+    private static IEnumerable<Type> GetTypesSafe(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            // If the assembly fails to load completely, salvage the types that successfully loaded
+            return ex.Types.Where(t => t != null);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning($"Failed to read types from assembly {assembly.FullName}: {ex.Message}");
+            return [];
+        }
+    }
 }
 
+/// <summary>
+///     Attribute that signifies that the class is a Fix and should be loaded by PRF
+/// </summary>
+/// <param name="displayName"> display name of this fix in the config file.</param>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-internal sealed class FixAttribute(string? displayName = null) : Attribute
+public sealed class FixAttribute(string? displayName = null) : Attribute
 {
+    /// <summary>
+    ///     Display name of the fix.
+    /// </summary>
     public string? DisplayName { get; } = displayName;
 }
