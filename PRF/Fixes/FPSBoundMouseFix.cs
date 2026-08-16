@@ -27,6 +27,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     private static ConfigEntry<float> _virtualJoystickSensitivityX = null!;
     private static ConfigEntry<float> _virtualJoystickSensitivityY = null!;
     
+    private static bool _skipNextVjUpdate;
+    
     public FPSBoundMouseFix(ConfigFile config) : base(config)
     {
         _enableCenteringDuringFreelook = config.Bind(GetType().Name + " - Misc", "Enable Centering VJ During Freelook",
@@ -59,15 +61,16 @@ internal class FPSBoundMouseFix : ConfigurableFix
         + " on FPS. Does not affect controller/absolute input methods.";
     
     private static float GetCockpitFreelookSensitivity() => _cockpitFreelookSensitivity.Value * 0.5f;
-    public static float GetMapPanSensitivity() => _mapPanSensitivity.Value * 41.6665f; // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
+    
+    public static float GetMapPanSensitivity() =>
+        _mapPanSensitivity.Value * 41.6665f; // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
+    
     public static float GetOrbitCamSensitivity() => _orbitCamSensitivity.Value * 0.5f;
     public static float GetOrbitZoomSensitivity() => _orbitZoomSensitivity.Value;
     public static float GetTVCamSensitivity() => _TVCamSensitivity.Value * 0.01f;
     private static float GetVirtualJoystickCenteringForce() => _virtualJoystickCenteringForce.Value * 4f;
     private static float GetVirtualJoystickSensitivityX() => _virtualJoystickSensitivityX.Value * 0.5f;
     private static float GetVirtualJoystickSensitivityY() => _virtualJoystickSensitivityY.Value * 0.5f;
-    
-    private static bool _skipNextVjUpdate;
     
     // Map panning
     [HarmonyPatch(typeof(DynamicMap), nameof(DynamicMap.MapControls))]
@@ -420,7 +423,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     {
         // Same conditions to start touching VJ as PlayerAxisControls()
         if (pilot.aircraft == null || pilot.aircraft.cockpit.IsDetached() || __instance.pilotStrength < 0.2f ||
-            !PlayerSettings.virtualJoystickEnabled || DynamicMap.mapMaximized || RadialMenuMain.IsInUse() || LeaderboardMenu.IsOpen())
+            !PlayerSettings.virtualJoystickEnabled || DynamicMap.mapMaximized || RadialMenuMain.IsInUse() ||
+            LeaderboardMenu.IsOpen())
             return;
         
         // Skip first frame handling VJ after escape menu is closed to prevent race condition applying a wildly offset
@@ -521,7 +525,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     [HarmonyPostfix]
     private static void ResetVjAfterMenuClose()
     {
-        if (!PlayerSettings.virtualJoystickEnabled || SceneSingleton<FlightHud>.i == null || !SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
+        if (!PlayerSettings.virtualJoystickEnabled || SceneSingleton<FlightHud>.i == null ||
+            !SceneSingleton<FlightHud>.i.virtualJoystickPos.gameObject.activeSelf)
             return;
         
         SceneSingleton<FlightHud>.i.SetVirtualJoystick(Vector3.zero);

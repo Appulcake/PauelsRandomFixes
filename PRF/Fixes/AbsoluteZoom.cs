@@ -28,7 +28,8 @@ internal class AbsoluteZoom : ConfigurableFix
         _useNegative = config.Bind(GetType().Name, "Use Negative region", true,
             "Whether or not to use the negative region of the axis for the absolute bind. Note that the relative mode REQUIRES your device to have a negative portion.");
         
-        _invertAxis = config.Bind(nameof(AbsoluteZoom), "Invert zoom axis", false);
+        _invertAxis = config.Bind(nameof(AbsoluteZoom), "Invert zoom axis", false,
+            "Whether to invert the bound zoom axis' direction.");
         
         _cockpitSensitivity = config.Bind(GetType().Name, "Relative Cockpit zoom sensitivity", 5f,
             new ConfigDescription(
@@ -102,6 +103,7 @@ internal class AbsoluteZoom : ConfigurableFix
     
     [HarmonyPatch(typeof(CameraOrbitState), nameof(CameraOrbitState.Inputs))]
     [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
     public static void AbsoluteZoomInOrbit(CameraOrbitState __instance, ref CameraStateManager cam)
     {
         if (!_useAbsolute.Value) return;
@@ -141,6 +143,7 @@ internal class AbsoluteZoom : ConfigurableFix
     
     [HarmonyPatch(typeof(CameraTVState), nameof(CameraTVState.UpdateState))]
     [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
     public static void AbsoluteZoomTV(CameraTVState __instance, ref CameraStateManager cam)
     {
         if (!_useAbsolute.Value) return;
@@ -182,18 +185,11 @@ internal class AbsoluteZoom : ConfigurableFix
     {
         var input = GameManager.playerInput.GetAxis(AxisName);
         
-        if (_useNegative.Value)
-        {
-            input = (input + 1) / 2;
-        }
-
-        if (_invertAxis.Value)
-        {
-            input = 1f - input;
-        }
-
+        if (_useNegative.Value) input = (input + 1) / 2;
+        
+        if (_invertAxis.Value) input = 1f - input;
+        
         return input;
     }
-
 }
 #endif
