@@ -40,7 +40,7 @@ internal class WarheadDesyncFix(ConfigFile config) : ConfigurableFix(config)
         // to use, but even if they saw them as unavailable, this'd result in a lot of the faction's nukes going into
         // a completely inaccessible storage
         
-        __result = __instance.stores.Any(storage => !storage.Disabled);
+        __result = __instance.stores.Any(storage => storage != null && !storage.Disabled);
         return false;
     }
     
