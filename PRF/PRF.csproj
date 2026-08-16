@@ -98,7 +98,7 @@
         </CreateItem>
 
         <!-- Copy the build output -->
-        <Message Text="Copying build output assemblies from $(OutDir)*.dll to $(ModDestination)\$(AssemblyName)" Importance="high"/>
+        <Message Text="Copying build output assemblies from $(OutDir)*.dll to $(ModDestination)\$(AssemblyName)-$(Configuration)" Importance="high"/>
         <Copy SourceFiles="@(DllFiles)" DestinationFolder="$(ModDestination)\$(AssemblyName)"/>
     </Target>
 </Project>
