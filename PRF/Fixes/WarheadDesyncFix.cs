@@ -1,3 +1,4 @@
+using System.Linq;
 using BepInEx.Configuration;
 using HarmonyLib;
 using NuclearOption.Networking;
@@ -39,14 +40,7 @@ internal class WarheadDesyncFix(ConfigFile config) : ConfigurableFix(config)
         // to use, but even if they saw them as unavailable, this'd result in a lot of the faction's nukes going into
         // a completely inaccessible storage
         
-        foreach (var storage in __instance.stores)
-            if (storage != null && !storage.Disabled)
-            {
-                __result = true;
-                return false;
-            }
-        
-        __result = false;
+        __result = __instance.stores.Any(storage => storage != null && !storage.Disabled);
         return false;
     }
     
