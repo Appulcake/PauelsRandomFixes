@@ -98,7 +98,7 @@ to open by default).
 >   but other inputs from e.g. keyboard/controller are still allowed that stack with this)
 > - Option to Restore VJ's position to where it was when map is closed
 >
-> Client only, on by default (does nothing when not using Virtual Joystick).
+> Client only, on by default.
 ---
 
 #### LongRangeGunServerValidatorFix
@@ -107,7 +107,7 @@ to open by default).
 > 3000m
 > or 5s bullet limit for HitPlausible), so that player controlled long range guns (e.g. railguns) can do proper damage
 > when playing on a server.
-> <br><br>Server only, on by default (does nothing on client).
+> <br><br>Server only, on by default.
 ---
 
 #### LookAtTargetFix
@@ -177,8 +177,8 @@ to open by default).
 > rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
 > <br>Also works when changing Custom Axis with throttle when holding "Axis Modifier" key.
 > <br><br>Not relevant (or active) if you don't have Relative Throttle on in Controls settings (i.e. when using a
-> physical
-> throttle slider).
+> physical throttle slider).
+> <br><br>Client only, on by default.
 ---
 
 #### WarheadDesyncFix
