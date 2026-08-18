@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
@@ -28,7 +29,38 @@ public class PRF : BaseUnityPlugin
     
     private void Start()
     {
+        LoadAdjacentAssemblies();
         LoadFixes();
+    }
+    
+    
+    private void LoadAdjacentAssemblies()
+    {
+        var pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (pluginDirectory is null) return;
+        
+        foreach (var dll in Directory.GetFiles(pluginDirectory, "*.dll", SearchOption.AllDirectories))
+        {
+            try
+            {
+                var assembly = AssemblyName.GetAssemblyName(dll);
+                
+                // Ignore assemblies that are already loaded.
+                if (AppDomain.CurrentDomain.GetAssemblies()
+                    .Any(a => AssemblyName.ReferenceMatchesDefinition(
+                        a.GetName(), assembly)))
+                    continue;
+                
+                Assembly.LoadFrom(dll);
+                Logger.LogInfo($"Loaded assembly: {Path.GetFileName(dll)}");
+            }
+            
+            catch (Exception e)
+            {
+                Logger.LogWarning(
+                    $"Couldn't load {Path.GetFileName(dll)}: {e.Message}\n{e.StackTrace}");
+            }
+        }
     }
     
     private void LoadFixes()
