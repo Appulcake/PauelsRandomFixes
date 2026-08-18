@@ -36,10 +36,13 @@ public class PRF : BaseUnityPlugin
     
     private void LoadAdjacentAssemblies()
     {
-        var pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        if (pluginDirectory is null) return;
+        var pluginDirectory = new DirectoryInfo(Assembly.GetExecutingAssembly().Location);
+
+        if (pluginDirectory.Parent != null)
+            pluginDirectory = pluginDirectory.Parent;
         
-        foreach (var dll in Directory.GetFiles(pluginDirectory, "*.dll", SearchOption.AllDirectories))
+        
+        foreach (var dll in Directory.GetFiles(pluginDirectory.FullName, "*.dll", SearchOption.AllDirectories))
         {
             try
             {
