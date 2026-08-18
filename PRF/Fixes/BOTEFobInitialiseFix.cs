@@ -20,24 +20,25 @@ internal class BoteFobInitialiseFix(ConfigFile config) : ConfigurableFix(config)
     // ReSharper disable once InconsistentNaming
     private static void Prefix(Airbase __instance)
     {
+        // This follows implementation from the proper PR pending on Bote at:
+        // https://github.com/MinecrackTyler/BoscaliOceanTrainingExercise/pull/17
+        //
+        // Idea is to add a newly created Bote FOB to proper CurrentMission's airbases list
+        // and then to serialise those changes so future joining clients get this state (otherwise they'd get the old
+        // version that was serialised on mission start, without any of the newly placed FOBs since)
+        
         if (!__instance.IsCustom)
             return;
         
         var saved = __instance.SavedAirbase;
-        
         if (saved == null || string.IsNullOrEmpty(saved.UniqueName) ||
             !saved.UniqueName.StartsWith("FOB_", StringComparison.Ordinal)) return;
         
         var mission = MissionManager.CurrentMission;
-        
         if (mission?.airbases == null)
             return;
         
-        // Future-proof against BOTE fixing this itself.
         if (mission.airbases.Any(x => x != null && x.UniqueName == saved.UniqueName)) return;
-        
-        // BOTE moved the live transform after Airbase.Awake(),
-        // so repair the serialized positions.
         saved.Center = __instance.center.GlobalPosition();
         
         saved.SelectionPosition =
@@ -49,18 +50,13 @@ internal class BoteFobInitialiseFix(ConfigFile config) : ConfigurableFix(config)
         
         saved.SavedInMission = true;
         saved.Airbase = __instance;
-        
         mission.airbases.Add(saved);
         
-        // NetworkMission normally keeps the serialization made at mission start.
-        // Force its late-join cache to be rebuilt from the now-current mission.
-        //
-        // Always using the game's multipart representation avoids having to
-        // reproduce its <=64 KB single-message/fallback logic.
+        // Using the multipart mission serialiser instead of doing checks in-place whether it's a <64kB mission or not
+        // This keeps it simpler and more compatible with any mission
+        
         var networkMission = NetworkManagerNuclearOption.i.NetworkMission;
-        
         networkMission.partSender = NetworkMission.PartSender.Create(new NetworkMission.SyncMission(mission));
-        
         networkMission.sendAsParts = true;
     }
 }
