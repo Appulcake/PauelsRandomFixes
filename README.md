@@ -29,6 +29,24 @@ to open by default).
 > <br><br>Required on server and client, off by default.
 ---
 
+#### BOTEFobInitialiseFix
+
+> Fixes BOTE FOBs not being properly saved into CurrentMission's airbases list, so that it can sync to future (re)joining
+> clients allowing them to see previously placed FOB airbases.<br>
+> Addresses https://github.com/MinecrackTyler/BoscaliOceanTrainingExercise/issues/16 | 
+> https://github.com/MinecrackTyler/BoscaliOceanTrainingExercise/pull/17.
+> <br><br>Required on server only, on by default (inert on client).
+---
+
+#### BOTESpawnProtection
+
+> Fixes BOTE's ship spawns on servers being slightly underwater, causing violent behaviour and in LCAC's case often results 
+> in it drowning right away.<br>
+> Addresses https://github.com/MinecrackTyler/BoscaliOceanTrainingExercise/issues/9 (the spawn immunity part as per comment 
+> in that thread).
+> <br><br>Required on client and enables extra protections when on server, off by default.
+---
+
 #### BrakeAsAxis
 
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With
