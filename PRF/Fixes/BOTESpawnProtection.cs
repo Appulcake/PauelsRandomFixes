@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using BepInEx.Configuration;
 using HarmonyLib;
 using NuclearOption.Jobs;
@@ -11,7 +13,13 @@ namespace PRF.Fixes;
 internal class BOTESpawnProtection(ConfigFile config) : ConfigurableFix(config)
 {
     private const float ProtectionDuration = 10f;
-    private const string ShipPartBridgeTypeName = "NOComponentWIP.ShipPartBridge";
+    
+    private static readonly Type? ShipPartBridgeType = AppDomain.CurrentDomain.GetAssemblies()
+        .FirstOrDefault(a => a.GetName().Name == "Bote")
+        ?.GetType("NOComponentWIP.ShipPartBridge", false);
+    
+    private static bool IsBoteShip(Aircraft aircraft) =>
+        ShipPartBridgeType != null && aircraft.GetComponent(ShipPartBridgeType) != null;
     
     protected override string Description =>
         $"{base.Description}\n" +
@@ -178,12 +186,6 @@ internal class BOTESpawnProtection(ConfigFile config) : ConfigurableFix(config)
         
         return aircraft.TryGetComponent<BoteShipSpawnProtection>(out var protection) &&
                protection.Active;
-    }
-    
-    private static bool IsBoteShip(Aircraft aircraft)
-    {
-        var bridgeType = AccessTools.TypeByName(ShipPartBridgeTypeName);
-        return bridgeType != null && aircraft.GetComponent(bridgeType) != null;
     }
 }
 
