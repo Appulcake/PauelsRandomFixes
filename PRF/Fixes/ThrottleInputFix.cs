@@ -12,6 +12,7 @@ internal class ThrottleInputFix : ConfigurableFix
 {
     private static ConfigEntry<AbsoluteInputMode> _absoluteInputMode = null!;
     private static ConfigEntry<float> _absoluteCenterIgnoreThreshold = null!;
+    private static ConfigEntry<AnalogueIncrementalInputMode> _analogueIncrementalInputMode = null!;
     
     private static ConfigEntry<RelativeInputMode> _relativeInputMode = null!;
     private static ConfigEntry<float> _relativeSensitivity = null!;
@@ -44,6 +45,12 @@ internal class ThrottleInputFix : ConfigurableFix
                 "Size of the center zone ignored by Direct Ignore Center. 0 means only exact center is ignored. " +
                 "Higher values widen the ignored range. Throttle keeps its previous position while input is inside this zone.",
                 new AcceptableValueRange<float>(0f, 1f)));
+        
+        _analogueIncrementalInputMode = config.Bind(GetType().Name, "Analogue Increase/Decrease Mode",
+            AnalogueIncrementalInputMode.Relative,
+            "Controls analogue axes bound to \"Increase Throttle\" or \"Decrease Throttle\" when relative throttle is disabled. " +
+            "Relative treats them as proportional increase/decrease controls. Absolute treats them as absolute throttle positions, " +
+            "with Increase covering 50-100% and Decrease covering 50-0%. Binary buttons and keyboard keys remain relative.");
         
         _relativeInputMode = config.Bind(GetType().Name, "Relative Input Mode", RelativeInputMode.Proportional,
             "Proportional makes analogue relative throttle inputs adjust throttle faster or slower depending on how much " +
@@ -98,11 +105,42 @@ internal class ThrottleInputFix : ConfigurableFix
     {
         None,
         FullAxis,
-        Incremental
+        IncrementalAxis,
+        IncrementalButton
+    }
+    
+    private enum AnalogueIncrementalInputMode
+    {
+        Relative,
+        Absolute
     }
     
     private static ThrottleInputKind _lastThrottleInputKind;
     private static PilotPlayerState? _throttleInputState;
+    private static bool? _analogueIncrementalRelativeOverride;
+    
+    private static AnalogueIncrementalInputMode GetAnalogueIncrementalInputMode()
+    {
+        if (!_analogueIncrementalRelativeOverride.HasValue)
+            return _analogueIncrementalInputMode.Value;
+        
+        return _analogueIncrementalRelativeOverride.Value
+            ? AnalogueIncrementalInputMode.Relative
+            : AnalogueIncrementalInputMode.Absolute;
+    }
+    
+    // "API" for optional companion mods, null = use configured mode, true = Relative, false = Absolute
+    internal static void SetAnalogueIncrementalInputModeOverride(bool? relative)
+    {
+        _analogueIncrementalRelativeOverride = relative;
+    }
+    
+    internal static bool? GetAnalogueIncrementalInputModeOverride() =>
+        _analogueIncrementalRelativeOverride;
+    
+    internal static bool GetEffectiveAnalogueIncrementalInputMode() =>
+        GetAnalogueIncrementalInputMode() == AnalogueIncrementalInputMode.Relative;
+    
     // I think exposing a 1.0 as default to users is more meaningful so calibrate the default 3 units/s movement to 1.0
     // instead of a more cryptic 3.0 default or explaining that -1 to 1 is 2 units so at 3 u/s it takes 0.67s on 3.0 to
     // move it from 0% to 100%, instead it's just 1.0 as "normal rate"
@@ -153,9 +191,38 @@ internal class ThrottleInputFix : ConfigurableFix
         ApplyAbsoluteInputMode(ref state.simulatedThrottle, current, previous);
     }
     
-    private static bool ShouldUseRelativeHandling(ThrottleInputKind inputKind) => PlayerSettings.throttleUseRelative || (_absoluteInputMode.Value != AbsoluteInputMode.VanillaHybrid && inputKind == ThrottleInputKind.Incremental);
+    private static bool ShouldUseRelativeHandling(ThrottleInputKind inputKind)
+    {
+        if (PlayerSettings.throttleUseRelative)
+            return true;
+        
+        // Vanilla Hybrid intentionally returns to vanilla handling
+        if (_absoluteInputMode.Value == AbsoluteInputMode.VanillaHybrid)
+            return false;
+        
+        return inputKind switch
+        {
+            ThrottleInputKind.IncrementalButton => true,
+            ThrottleInputKind.IncrementalAxis =>
+                GetAnalogueIncrementalInputMode() == AnalogueIncrementalInputMode.Relative,
+            _ => false
+        };
+    }
     
-    private static bool ShouldUseAbsoluteHandling(ThrottleInputKind inputKind) => _absoluteInputMode.Value == AbsoluteInputMode.VanillaHybrid || inputKind == ThrottleInputKind.FullAxis;
+    private static bool ShouldUseAbsoluteHandling(ThrottleInputKind inputKind)
+    {
+        if (_absoluteInputMode.Value == AbsoluteInputMode.VanillaHybrid)
+            return true;
+        
+        return inputKind switch
+        {
+            ThrottleInputKind.FullAxis => true,
+            ThrottleInputKind.IncrementalAxis =>
+                GetAnalogueIncrementalInputMode() == AnalogueIncrementalInputMode.Absolute,
+            _ => false
+        };
+    }
+    
     private static void ApplyRelativeThrottle(PilotPlayerState state, float input)
     {
         var signedState = PlayerSettings.throttleUseRelative || PlayerSettings.throttleUseNegative;
@@ -344,10 +411,20 @@ internal class ThrottleInputFix : ConfigurableFix
             
             if (map.ShowInField(AxisRange.Positive) || map.ShowInField(AxisRange.Negative))
             {
-                return ThrottleInputKind.Incremental;
+                // Binary Increase/Decrease always gets highest priority
+                if (map.elementType == ControllerElementType.Button)
+                    return ThrottleInputKind.IncrementalButton;
+                
+                // Analogue trigger / split-axis Increase/Decrease
+                if (map.elementType == ControllerElementType.Axis)
+                {
+                    currentKind = ThrottleInputKind.IncrementalAxis;
+                    continue;
+                }
             }
             
-            if (map.ShowInField(AxisRange.Full))
+            // Don't overwrite an already detected split analogue source
+            if (map.ShowInField(AxisRange.Full) && currentKind == ThrottleInputKind.None)
                 currentKind = ThrottleInputKind.FullAxis;
         }
         
