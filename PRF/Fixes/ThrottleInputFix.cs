@@ -24,16 +24,17 @@ internal class ThrottleInputFix : ConfigurableFix
     {
         _absoluteInputMode = config.Bind(GetType().Name, "Absolute Input Mode", AbsoluteInputMode.Direct,
             "Direct makes the throttle axis fully authoritative. Moving your input to a position directly moves the in-game " +
-            "throttle to that position. Likely best for physical throttles, sliders, and other absolute axes.\n\n" +
+            "throttle to that position, without randomly dropping/ignoring inputs and changing to relative mode suddenly " +
+            "based on magnitude of motion vs last frame (which can especially be noticeable during FPS drops).\n" + 
+            "Likely best for physical throttles, sliders, and other absolute axes.\n\n" +
             
             "Direct Ignore Center works like Direct, but input around the center is ignored and the previous throttle position " +
             "is kept. This is mainly useful for controls such as trackpads/touchpads emulating a joystick, where releasing the " +
             "input snaps the virtual axis back to (exact) center. Increasing Absolute Center Ignore Threshold widens the ignored " +
             "range, which also means throttle positions inside that range cannot be selected with the axis.\n " + 
             "Example usecase: use trackpad on Steam Controller as absolute throttle - touch at certain position or slide along it " +
-            "to control throttle on an absolute range like a volume slider, when releasing touch throttle stays at that point " + 
-            "without snapping back to center. By ignoring the very center spot from acting on throttle, this instant snap " + 
-            "to exact center on touch release doesn't set throttle back to 50%.\n\n" +
+            "to control throttle on an absolute range like a volume slider. When releasing touch, throttle stays at that point " + 
+            "without snapping back to 50%, by ignoring the very center spot from acting on throttle.\n\n" +
             
             "Vanilla Hybrid uses the game's original throttle handling. Small changes between frames are applied " +
             "directly, while larger changes may instead be applied gradually (acting like relative throttle), and some edge " +
@@ -41,28 +42,28 @@ internal class ThrottleInputFix : ConfigurableFix
         _absoluteCenterIgnoreThreshold = config.Bind(GetType().Name, "Absolute Center Ignore Threshold", 0f,
             new ConfigDescription(
                 "Size of the center zone ignored by Direct Ignore Center. 0 means only exact center is ignored. " +
-                "Higher values widen the ignored range, throttle keeps its previous position while input is inside this zone.",
+                "Higher values widen the ignored range. Throttle keeps its previous position while input is inside this zone.",
                 new AcceptableValueRange<float>(0f, 1f)));
         
         _relativeInputMode = config.Bind(GetType().Name, "Relative Input Mode", RelativeInputMode.Proportional,
-            "Proportional makes analogue relative throttle inputs adjust throttle faster or slower depending on how far " +
+            "Proportional makes analogue relative throttle inputs adjust throttle faster or slower depending on how much " +
             "the input is pressed. Binary inputs such as keyboard keys/gamepad buttons still adjust at full speed.\n\n" +
             
             "Full Rate ignores analogue input value, any input above the configured deadzone is treated as fully pressed. " +
             "Useful if you use an analogue trigger or axis for relative throttle but always want the same full " +
             "adjustment speed.");
         
-        _relativeSensitivity = config.Bind(GetType().Name, "Relative Sensitivity", 3f,
+        _relativeSensitivity = config.Bind(GetType().Name, "Relative Sensitivity", 1f,
             "Overall speed multiplier for relative throttle movement.");
         _relativeDeadzone = config.Bind(GetType().Name, "Relative Deadzone", 0.1f,
             new ConfigDescription(
                 "Minimum input required in Full Rate mode before relative throttle starts moving. " 
-                + "Only affects Full Rate. 0.1 matches vanilla's hardcoded threshold.",
+                + "0.1 (10%) matches vanilla's hardcoded threshold.",
                 new AcceptableValueRange<float>(0f, 1f)));
         
         _applyThrottleModesToCustomAxis = config.Bind(GetType().Name, "Apply Throttle Modes To Custom Axis", true,
-            "Applies the configured throttle input modes when Throttle is redirected to Custom Axis 1 by holding " +
-            "\"Axis Modifier\". Does not change the directly bound \"Custom Axis 1\" input.");
+            "Applies the configured throttle input modes when throttle is redirected to Custom Axis 1 by holding " +
+            "\"Axis Modifier\".\n\nDoes not change the directly bound \"Custom Axis 1\" input.");
         _relativeCustomAxisSensitivity = config.Bind(GetType().Name, "Relative Custom Axis Sensitivity", 1f,
             "Speed multiplier for relative throttle input while it's redirected to Custom Axis 1 with \"Axis Modifier\".");
     }
@@ -72,13 +73,13 @@ internal class ThrottleInputFix : ConfigurableFix
         "Improves and makes throttle axis handling configurable for both absolute and relative throttle " + 
         "(based on \"Use Throttle Relative Axis\" in the game's settings).\n\n" +
         
-        "With relative throttle disabled, Direct mode makes the throttle axis behave as a proper authoritative input, " +
-        "instead of vanilla deciding whether to apply movement directly or gradually based on changes between frames.\n" +
-        "With relative throttle enabled, Proportional mode allows analogue inputs to control how quickly throttle " +
-        "moves, while binary inputs still move it at full speed.\n\n" + 
-        
-        "With relative mode disabled, if you use binds on \"Increase Throttle\" and \"Decrease Throttle\", those still act as " + 
-        "relative incremental input automatically, following other relative throttle related settings in this fix.";
+        "With relative throttle disabled, full \"Throttle Axis\" binds use the selected Absolute Input Mode, while " + 
+        "\"Increase Throttle\" and \"Decrease Throttle\" binds are automatically treated as incremental/relative inputs.\n\n" +
+        "With relative throttle enabled, Proportional mode allows analogue inputs to control how quickly throttle moves, " +
+        "while binary inputs still move it at full speed. " +
+        "Also fixes relative throttle going into negative range, causing it to \"stick\" where you need to first " +
+        // ReSharper disable once UseVerbatimString
+        "increment it for a while before it comes out of this zone and starts going up from 0%.";
     
     private enum AbsoluteInputMode
     {
@@ -102,6 +103,10 @@ internal class ThrottleInputFix : ConfigurableFix
     
     private static ThrottleInputKind _lastThrottleInputKind;
     private static PilotPlayerState? _throttleInputState;
+    // I think exposing a 1.0 as default to users is more meaningful so calibrate the default 3 units/s movement to 1.0
+    // instead of a more cryptic 3.0 default or explaining that -1 to 1 is 2 units so at 3 u/s it takes 0.67s on 3.0 to
+    // move it from 0% to 100%, instead it's just 1.0 as "normal rate"
+    private static float GetRelativeSensitivity() => _relativeSensitivity.Value * 3f;
     
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.PlayerThrottleAxis1Controls))]
     [HarmonyPrefix]
@@ -154,7 +159,7 @@ internal class ThrottleInputFix : ConfigurableFix
     private static void ApplyRelativeThrottle(PilotPlayerState state, float input)
     {
         var signedState = PlayerSettings.throttleUseRelative || PlayerSettings.throttleUseNegative;
-        var sensitivity = _relativeSensitivity.Value;
+        var sensitivity = GetRelativeSensitivity();
         
         // -1-1 has twice the travel of 0-1, with negative region or relative throttle we get -1-1 range instead of 0-1
         // This allows keeping the -1-1 range everywhere else including for relative throttle, and only reduce it to
@@ -208,7 +213,7 @@ internal class ThrottleInputFix : ConfigurableFix
             return;
         }
         
-        // Axis Modifier redirects Throttle to Custom Axis 1
+        // Axis Modifier redirects throttle to Custom Axis 1
         if (ShouldUseRelativeHandling(inputKind))
         {
             output = ApplyRelativeInput(output, throttleInput, _relativeCustomAxisSensitivity.Value, 0f, 1f);

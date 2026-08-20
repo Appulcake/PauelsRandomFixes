@@ -188,14 +188,17 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### ThrottleRelativeVelocity
+#### ThrottleInputFix
 
-> Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary,
-> fixed
-> rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
-> <br>Also works when changing Custom Axis with throttle when holding "Axis Modifier" key.
-> <br><br>Not relevant (or active) if you don't have Relative Throttle on in Controls settings (i.e. when using a
-> physical throttle slider).
+> Improves and makes throttle axis handling configurable for both absolute and relative throttle (based on "Use Throttle 
+> Relative Axis" in the game's settings).<br><br>
+> With relative throttle disabled, Direct mode makes the throttle axis behave as a proper authoritative input, instead 
+> of vanilla deciding whether to apply movement directly or gradually based on changes between frames.<br>
+> With relative throttle enabled, Proportional mode allows analogue inputs to control how quickly throttle moves, while 
+> binary inputs still move it at full speed. Also fixes relative throttle going into negative range, causing it to
+> "stick" where you need to first increment it for a while before it comes out of this zone and starts going up from 0%.
+> <br><br>With relative mode disabled, if you use binds on "Increase Throttle" and "Decrease Throttle", those still act as 
+> relative incremental input automatically, following other relative throttle related settings in this fix.
 > <br><br>Client only, on by default.
 ---
 
