@@ -20,15 +20,6 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### BlueprinterServerFix
-
-> Prevents Blueprinter's prefabHash collision reassignments from being cleaned up before full game load on dedicated
-> servers, fixing various prefab mix-up issues with too many content mods (e.g. swapped turret vs chassis, wrong
-> container
-> types spawned). Does nothing without Blueprinter present.
-> <br><br>Required on server and client, off by default.
----
-
 #### BrakeAsAxis
 
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With
