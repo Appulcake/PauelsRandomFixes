@@ -21,20 +21,23 @@ internal class ThrottleInputFix : ConfigurableFix
     private static ConfigEntry<bool> _applyThrottleModesToCustomAxis = null!;
     private static ConfigEntry<float> _relativeCustomAxisSensitivity = null!;
     
+    private static ThrottleInputKind _lastThrottleInputKind;
+    private static bool? _analogueIncrementalRelativeOverride;
+    
     public ThrottleInputFix(ConfigFile config) : base(config)
     {
         _absoluteInputMode = config.Bind(GetType().Name, "Absolute Input Mode", AbsoluteInputMode.Direct,
             "Direct makes the throttle axis fully authoritative. Moving your input to a position directly moves the in-game " +
             "throttle to that position, without randomly dropping/ignoring inputs and changing to relative mode suddenly " +
-            "based on magnitude of motion vs last frame (which can especially be noticeable during FPS drops).\n" + 
+            "based on magnitude of motion vs last frame (which can especially be noticeable during FPS drops).\n" +
             "Likely best for physical throttles, sliders, and other absolute axes.\n\n" +
             
             "Direct Ignore Center works like Direct, but input around the center is ignored and the previous throttle position " +
             "is kept. This is mainly useful for controls such as trackpads/touchpads emulating a joystick, where releasing the " +
             "input snaps the virtual axis back to (exact) center. Increasing Absolute Center Ignore Threshold widens the ignored " +
-            "range, which also means throttle positions inside that range cannot be selected with the axis.\n " + 
-            "Example usecase: use trackpad on Steam Controller as absolute throttle - touch at certain position or slide along it " +
-            "to control throttle on an absolute range like a volume slider. When releasing touch, throttle stays at that point " + 
+            "range, which also means throttle positions inside that range cannot be selected with the axis.\n " +
+            "Example use case: use trackpad on Steam Controller as absolute throttle - touch at certain position or slide along it " +
+            "to control throttle on an absolute range like a volume slider. When releasing touch, throttle stays at that point " +
             "without snapping back to 50%, by ignoring the very center spot from acting on throttle.\n\n" +
             
             "Vanilla Hybrid uses the game's original throttle handling. Small changes between frames are applied " +
@@ -64,7 +67,7 @@ internal class ThrottleInputFix : ConfigurableFix
             "Overall speed multiplier for relative throttle movement.");
         _relativeDeadzone = config.Bind(GetType().Name, "Relative Deadzone", 0.1f,
             new ConfigDescription(
-                "Minimum input required in Full Rate mode before relative throttle starts moving. " 
+                "Minimum input required in Full Rate mode before relative throttle starts moving. "
                 + "0.1 (10%) matches vanilla's hardcoded threshold.",
                 new AcceptableValueRange<float>(0f, 1f)));
         
@@ -77,47 +80,17 @@ internal class ThrottleInputFix : ConfigurableFix
     
     protected override string Description =>
         $"{base.Description}\n" +
-        "Improves and makes throttle axis handling configurable for both absolute and relative throttle " + 
+        "Improves and makes throttle axis handling configurable for both absolute and relative throttle " +
         "(based on \"Use Throttle Relative Axis\" in the game's settings).\n\n" +
         
-        "With relative throttle disabled, full \"Throttle Axis\" binds use the selected Absolute Input Mode, while " + 
-        "\"Increase Throttle\" and \"Decrease Throttle\" binds are automatically treated as incremental/relative inputs.\n\n" +
+        "With relative throttle disabled, full \"Throttle Axis\" binds use the selected Absolute Input Mode, while " +
+        "\"Increase Throttle\" and \"Decrease Throttle\" binds are detected separately as incremental/relative inputs.\n\n" +
+        
         "With relative throttle enabled, Proportional mode allows analogue inputs to control how quickly throttle moves, " +
         "while binary inputs still move it at full speed. " +
         "Also fixes relative throttle going into negative range, causing it to \"stick\" where you need to first " +
         // ReSharper disable once UseVerbatimString
         "increment it for a while before it comes out of this zone and starts going up from 0%.";
-    
-    private enum AbsoluteInputMode
-    {
-        Direct,
-        DirectIgnoreCenter,
-        VanillaHybrid
-    }
-    
-    private enum RelativeInputMode
-    {
-        Proportional,
-        FullRate
-    }
-    
-    private enum ThrottleInputKind
-    {
-        None,
-        FullAxis,
-        IncrementalAxis,
-        IncrementalButton
-    }
-    
-    private enum AnalogueIncrementalInputMode
-    {
-        Relative,
-        Absolute
-    }
-    
-    private static ThrottleInputKind _lastThrottleInputKind;
-    private static PilotPlayerState? _throttleInputState;
-    private static bool? _analogueIncrementalRelativeOverride;
     
     private static AnalogueIncrementalInputMode GetAnalogueIncrementalInputMode()
     {
@@ -139,7 +112,7 @@ internal class ThrottleInputFix : ConfigurableFix
         _analogueIncrementalRelativeOverride;
     
     internal static bool GetEffectiveAnalogueIncrementalInputMode() =>
-        GetAnalogueIncrementalInputMode() == AnalogueIncrementalInputMode.Relative;
+        ShouldUseRelativeHandling(ThrottleInputKind.IncrementalAxis);
     
     // I think exposing a 1.0 as default to users is more meaningful so calibrate the default 3 units/s movement to 1.0
     // instead of a more cryptic 3.0 default or explaining that -1 to 1 is 2 units so at 3 u/s it takes 0.67s on 3.0 to
@@ -156,39 +129,40 @@ internal class ThrottleInputFix : ConfigurableFix
         var throttleInput = Mathf.Clamp(inputPlayer.GetAxisRaw("Throttle"), -1f, 1f);
         var previousThrottleInput = Mathf.Clamp(inputPlayer.GetAxisRawPrev("Throttle"), -1f, 1f);
         var axisModifier = inputPlayer.GetButton("Axis Modifier");
-        var inputKind = GetThrottleInputKind(__instance);
+        var inputKind = GetThrottleInputKind(inputPlayer);
         
-        UpdateThrottle(__instance, throttleInput, previousThrottleInput, axisModifier, inputKind);
-        UpdateCustomAxis1(__instance, throttleInput, previousThrottleInput, axisModifier, inputKind);
+        UpdateThrottle(ref __instance.simulatedThrottle, throttleInput, previousThrottleInput, axisModifier, inputKind);
+        UpdateCustomAxis1(ref __instance.controlInputs.customAxis1, inputPlayer, throttleInput, previousThrottleInput,
+            axisModifier, inputKind);
         ApplyThrottleOutput(__instance);
         
         return false;
     }
     
-    // Reset throttle input state on entering new PilotPlayerState, just in case it's not cleared for any reason between instances
+    // Reset last detected input source when entering new player state
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.EnterState))]
     [HarmonyPrefix]
     private static void EnterStatePrefix()
     {
-        _throttleInputState = null;
         _lastThrottleInputKind = ThrottleInputKind.None;
     }
     
-    private static void UpdateThrottle(PilotPlayerState state, float current, float previous, bool axisModifier, ThrottleInputKind inputKind)
+    private static void UpdateThrottle(ref float simulatedThrottle, float current, float previous, bool axisModifier,
+        ThrottleInputKind inputKind)
     {
         if (axisModifier)
             return;
         
         if (ShouldUseRelativeHandling(inputKind))
         {
-            ApplyRelativeThrottle(state, current);
+            ApplyRelativeThrottle(ref simulatedThrottle, current);
             return;
         }
         
         if (!ShouldUseAbsoluteHandling(inputKind))
             return;
         
-        ApplyAbsoluteInputMode(ref state.simulatedThrottle, current, previous);
+        ApplyAbsoluteInputMode(ref simulatedThrottle, current, previous);
     }
     
     private static bool ShouldUseRelativeHandling(ThrottleInputKind inputKind)
@@ -223,7 +197,7 @@ internal class ThrottleInputFix : ConfigurableFix
         };
     }
     
-    private static void ApplyRelativeThrottle(PilotPlayerState state, float input)
+    private static void ApplyRelativeThrottle(ref float simulatedThrottle, float input)
     {
         var signedState = PlayerSettings.throttleUseRelative || PlayerSettings.throttleUseNegative;
         var sensitivity = GetRelativeSensitivity();
@@ -235,7 +209,7 @@ internal class ThrottleInputFix : ConfigurableFix
         if (!signedState)
             sensitivity *= 0.5f;
         
-        state.simulatedThrottle = ApplyRelativeInput(state.simulatedThrottle, input, sensitivity, signedState ? -1f : 0f, 1f);
+        simulatedThrottle = ApplyRelativeInput(simulatedThrottle, input, sensitivity, signedState ? -1f : 0f, 1f);
     }
     
 #pragma warning disable Harmony003
@@ -243,7 +217,6 @@ internal class ThrottleInputFix : ConfigurableFix
     {
         input = GetRelativeInput(input);
         return Mathf.Clamp(value + input * sensitivity * Time.deltaTime, min, max);
-        
     }
 #pragma warning restore Harmony003
     
@@ -263,7 +236,8 @@ internal class ThrottleInputFix : ConfigurableFix
         state.controlInputs.throttle = Mathf.Clamp01(output);
     }
     
-    private static void UpdateCustomAxis1(PilotPlayerState state, float throttleInput, float previousThrottleInput, bool axisModifier, ThrottleInputKind inputKind)
+    private static void UpdateCustomAxis1(ref float customAxis1, Player inputPlayer, float throttleInput,
+        float previousThrottleInput, bool axisModifier, ThrottleInputKind inputKind)
     {
         // When _applyThrottleModesToCustomAxis is disabled for modifier input, reproduce vanilla's combined
         // Custom Axis 1 + Throttle behaviour
@@ -272,25 +246,16 @@ internal class ThrottleInputFix : ConfigurableFix
         var modifierInput = useVanillaModifier ? GetVanillaModifierInput(throttleInput) : 0f;
         
         // Directly bound Custom Axis 1 always keeps vanilla behaviour
-        var output = UpdateVanillaCustomAxis1(state, modifierInput);
+        UpdateVanillaCustomAxis1(ref customAxis1, inputPlayer, modifierInput);
         
         if (!axisModifier || useVanillaModifier)
-        {
-            state.controlInputs.customAxis1 = output;
             return;
-        }
         
         // Axis Modifier redirects throttle to Custom Axis 1
         if (ShouldUseRelativeHandling(inputKind))
-        {
-            output = ApplyRelativeInput(output, throttleInput, _relativeCustomAxisSensitivity.Value, 0f, 1f);
-        }
+            customAxis1 = ApplyRelativeInput(customAxis1, throttleInput, _relativeCustomAxisSensitivity.Value, 0f, 1f);
         else if (ShouldUseAbsoluteHandling(inputKind))
-        {
-            output = ApplyAbsoluteCustomAxisInput(output, throttleInput, previousThrottleInput);
-        }
-        
-        state.controlInputs.customAxis1 = output;
+            ApplyAbsoluteCustomAxisInput(ref customAxis1, throttleInput, previousThrottleInput);
     }
     
     private static float GetVanillaModifierInput(float input)
@@ -301,25 +266,23 @@ internal class ThrottleInputFix : ConfigurableFix
         return Mathf.Abs(input) > 0.1f ? Mathf.Sign(input) : 0f;
     }
     
-    private static float ApplyAbsoluteCustomAxisInput(float output, float current, float previous)
+    private static void ApplyAbsoluteCustomAxisInput(ref float output, float current, float previous)
     {
         // Custom Axis output is stored as 0-1, while throttle absolute handling may have a signed -1-1 state
         
         var absoluteState = OutputToAbsoluteState(output);
         ApplyAbsoluteInputMode(ref absoluteState, current, previous);
         
-        return AbsoluteStateToOutput(absoluteState);
+        output = AbsoluteStateToOutput(absoluteState);
     }
     
-    private static float UpdateVanillaCustomAxis1(PilotPlayerState state, float modifierInput)
+    private static void UpdateVanillaCustomAxis1(ref float customAxis1, Player inputPlayer, float modifierInput)
     {
-        var inputPlayer = state.player;
         var current = Mathf.Clamp(inputPlayer.GetAxisRaw("Custom Axis 1"), -1f, 1f) + modifierInput;
         var previous = Mathf.Clamp(inputPlayer.GetAxisRawPrev("Custom Axis 1"), -1f, 1f);
-        var output = state.controlInputs.customAxis1;
         
-        ApplyVanillaHybrid(ref output, current, previous);
-        return Mathf.Clamp01(output);
+        ApplyVanillaHybrid(ref customAxis1, current, previous);
+        customAxis1 = Mathf.Clamp01(customAxis1);
     }
     
     private static void ApplyAbsoluteInputMode(ref float value, float current, float previous)
@@ -372,15 +335,9 @@ internal class ThrottleInputFix : ConfigurableFix
     }
 #pragma warning restore Harmony003
     
-    private static ThrottleInputKind GetThrottleInputKind(PilotPlayerState state)
+    private static ThrottleInputKind GetThrottleInputKind(Player inputPlayer)
     {
-        if (!ReferenceEquals(_throttleInputState, state))
-        {
-            _throttleInputState = state;
-            _lastThrottleInputKind = ThrottleInputKind.None;
-        }
-        
-        var currentKind = GetCurrentThrottleInputKind(state.player);
+        var currentKind = GetCurrentThrottleInputKind(inputPlayer);
         
         // When an input stops (e.g. keyboard ctrl/shift or binary gamepad button binds are no longer pressed),
         // rewired's element map returns none, which could result in a 0 input, instead we just keep the previous
@@ -433,5 +390,32 @@ internal class ThrottleInputFix : ConfigurableFix
     
     private static float OutputToAbsoluteState(float output) =>
         PlayerSettings.throttleUseNegative ? output * 2f - 1f : output;
+    
+    private enum AbsoluteInputMode
+    {
+        Direct,
+        DirectIgnoreCenter,
+        VanillaHybrid
+    }
+    
+    private enum RelativeInputMode
+    {
+        Proportional,
+        FullRate
+    }
+    
+    private enum ThrottleInputKind
+    {
+        None,
+        FullAxis,
+        IncrementalAxis,
+        IncrementalButton
+    }
+    
+    private enum AnalogueIncrementalInputMode
+    {
+        Relative,
+        Absolute
+    }
 }
 #endif
