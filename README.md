@@ -76,6 +76,12 @@ to open by default).
 > <br><br>Ideally, present on both client and server, but only on either end still has some benefits, on by default.
 ---
 
+#### LaserVisaulHitFix
+> Fixes an issue introduced with 0.34 where a client can sometimes incorrectly render a laser's beam pointing to a
+> wildly different direction than where the actual damage is going. This is purely a visual issue and fix.
+> <br><br>Client only, on by default.
+---
+
 #### LockedMapControlsWithVJFix
 
 > Fixes all plane control inputs being both prevented and stuck on their last state when using Virtual Joystick and
