@@ -20,15 +20,6 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### BlueprinterServerFix
-
-> Prevents Blueprinter's prefabHash collision reassignments from being cleaned up before full game load on dedicated
-> servers, fixing various prefab mix-up issues with too many content mods (e.g. swapped turret vs chassis, wrong
-> container
-> types spawned). Does nothing without Blueprinter present.
-> <br><br>Required on server and client, off by default.
----
-
 #### BrakeAsAxis
 
 > Normally, both "Apply Brakes" and "Brake Axis" binds are binary, any input on either applies 100% braking power. With
@@ -85,6 +76,12 @@ to open by default).
 > <br><br>Ideally, present on both client and server, but only on either end still has some benefits, on by default.
 ---
 
+#### LaserVisaulHitFix
+> Fixes an issue introduced with 0.34 where a client can sometimes incorrectly render a laser's beam pointing to a
+> wildly different direction than where the actual damage is going. This is purely a visual issue and fix.
+> <br><br>Client only, on by default.
+---
+
 #### LockedMapControlsWithVJFix
 
 > Fixes all plane control inputs being both prevented and stuck on their last state when using Virtual Joystick and
@@ -98,7 +95,7 @@ to open by default).
 >   but other inputs from e.g. keyboard/controller are still allowed that stack with this)
 > - Option to Restore VJ's position to where it was when map is closed
 >
-> Client only, on by default (does nothing when not using Virtual Joystick).
+> Client only, on by default.
 ---
 
 #### LongRangeGunServerValidatorFix
@@ -107,7 +104,7 @@ to open by default).
 > 3000m
 > or 5s bullet limit for HitPlausible), so that player controlled long range guns (e.g. railguns) can do proper damage
 > when playing on a server.
-> <br><br>Server only, on by default (does nothing on client).
+> <br><br>Server only, on by default.
 ---
 
 #### LookAtTargetFix
@@ -170,15 +167,18 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### ThrottleRelativeVelocity
+#### ThrottleInputFix
 
-> Fixes "Throttle Axis" bind to function as analogue input for relative throttle up/down inputs (instead of a binary,
-> fixed
-> rate up/down motion regardless of how much either side was pressed down). Has configurable sensitivity.
-> <br>Also works when changing Custom Axis with throttle when holding "Axis Modifier" key.
-> <br><br>Not relevant (or active) if you don't have Relative Throttle on in Controls settings (i.e. when using a
-> physical
-> throttle slider).
+> Improves and makes throttle axis handling configurable for both absolute and relative throttle (based on "Use Throttle 
+> Relative Axis" in the game's settings).<br><br>
+> With relative throttle disabled, Direct mode makes the throttle axis behave as a proper authoritative input, instead 
+> of vanilla deciding whether to apply movement directly or gradually based on changes between frames.<br>
+> With relative throttle enabled, Proportional mode allows analogue inputs to control how quickly throttle moves, while 
+> binary inputs still move it at full speed. Also fixes relative throttle going into negative range, causing it to
+> "stick" where you need to first increment it for a while before it comes out of this zone and starts going up from 0%.
+> <br><br>With relative mode disabled, if you use binds on "Increase Throttle" and "Decrease Throttle", those still act as 
+> relative incremental input automatically, following other relative throttle related settings in this fix.
+> <br><br>Client only, on by default.
 ---
 
 #### WarheadDesyncFix

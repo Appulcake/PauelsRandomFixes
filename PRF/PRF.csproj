@@ -41,7 +41,7 @@
         <Configurations>Debug;Release;Server</Configurations>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
-    
+
     <PropertyGroup Condition="'$(Configuration)' != 'Server'">
         <DefineConstants>$(DefineConstants);CLIENT</DefineConstants>
     </PropertyGroup>
