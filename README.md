@@ -31,16 +31,23 @@ to open by default).
 
 #### ClickthroughChatbox
 
-> Fixes allowing being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
+> Allows being able to click through Kill Feed / Chatbox to interact with covered up UI elements beneath.
 > <br><br>Client only, on by default.
 ---
 
 #### DisableVerticalCameraInCockpitFix
 
-> When enabled, prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical",
+> Prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical",
 > "Move Up", "Move Down"). Functionality in Free camera and Editor stays the same, only reverting this 0.34 change for
 > cockpit camera.
 > <br><br>Client only, on by default.
+---
+
+#### ExplosionKillAttributionFix
+> Fixes/adds kill attribution from secondary explosion kills. For example, if player A kills an ammo
+> container, and then that container's explosion kills some nearby units, player A will get kill attribution (rewards 
+> and kill feed will show them as killer of those units).
+> <br><br>Host only, on by default.
 ---
 
 #### FPSBoundMouseFix
@@ -73,7 +80,7 @@ to open by default).
 > bullet self hits are also rejected, so unfixed clients are still protected against damaging themselves, but that won't
 > prevent the client's BulletSim from stopping as it impacted, and thus their bullet disappears and won't damage the
 > intended target.
-> <br><br>Ideally, present on both client and server, but only on either end still has some benefits, on by default.
+> <br><br>Ideally, present on both client and host, but only on either end still has some benefits, on by default.
 ---
 
 #### LaserVisaulHitFix
@@ -104,7 +111,7 @@ to open by default).
 > 3000m
 > or 5s bullet limit for HitPlausible), so that player controlled long range guns (e.g. railguns) can do proper damage
 > when playing on a server.
-> <br><br>Server only, on by default.
+> <br><br>Host only, on by default.
 ---
 
 #### LookAtTargetFix
@@ -119,25 +126,19 @@ to open by default).
 
 #### ManualEngineSwivelFix
 
-> When enabled, allows overriding engine swivel system to be toggled between auto vs fully manual, without the game
-> trying
+> Allows overriding engine swivel system to be toggled between auto vs fully manual, without the game trying
 > to be "smart" about it and change engine vector whenever it feels like it. In manual mode, the swivel will always stay
 > where player points it, unless specifically toggled back to auto mode.
 > <br><br>Toggle by holding "Axis Modifier" and press "Toggle Flight Assist" (this will only toggle engine vectoring
-> mode,
-> not flight assist itself, to allow toggling FA and engine vector mode separately).
+> mode, not flight assist itself, to allow toggling FA and engine vector mode separately).
 > <br><br>Additionally, a second toggle bind can be enabled with "Enable Long Press Toggle Hotkey", which turns on the
 > chosen
 > "Long Press Toggle Hotkey" (by default Radar) to toggle engine vectoring mode on a long press. The short press of such
-> a
-> chosen action remains the same. E.g. if this is enabled and set to Radar, a short press on "Toggle Radar" key toggles
-> Radar,
-> and a long press on this same key toggles engine vectoring instead.
+> a chosen action remains the same. E.g. if this is enabled and set to Radar, a short press on "Toggle Radar" key toggles
+> Radar, and a long press on this same key toggles engine vectoring instead.
 > <br><br>Optionally, you can disable 45 degree swivel limit on low speeds when on manual mode, and auto toggling to
-> manual
-> vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first (both
-> enabled
-> by default).
+> manual vectoring when player inputs on Custom Axis 1 in auto mode, instead of needing to toggle it to manual first 
+> (both enabled by default).
 > <br><br>This engine vectoring fix is applicable to both swivel duct system (Vagrant, Medusa), and ducted thrust system
 > craft (Vortex). Does not affect tilt-wing (e.g. Tarantula) or wing sweep (e.g. Alkyon).
 > <br><br>Client only, off by default.
@@ -153,9 +154,15 @@ to open by default).
 #### RequireFreelookWithoutVJ
 
 > Enables needing to hold down Free Look button to activate Free Look, even when Virtual Joystick is disabled. While
-> using
-> Free Look in this mode, releasing it snaps camera back to center.
+> using Free Look in this mode, releasing it snaps camera back to center.
 > <br><br>Client only, off by default.
+---
+
+#### ResupplyAttributionFix
+> Fixes 0.34's new rearm system unintentionally not rewarding rearming others. Only direct rearm is fixed, i.e. 
+> deploying e.g. an ammo container or truck, if those resupply a unit's ammo directly the player who deployed it gets 
+> rewarded, but relayed rearm from another truck picking up ammo from it then rearming others is still not attributed.
+> <br><br>Host only, on by default.
 ---
 
 #### TargetDesignatorFix
@@ -190,4 +197,4 @@ to open by default).
 > The fix works by preventing nukes from being able to be placed in disabled warhead storages to begin with, so they're 
 > not put in inaccessible places (where not only would clients erroneously see them as accessible, they'd be unusable 
 > regardless). Those warheads are instead redistributed to the next valid, accessible storage nearby.
-> <br><br>Server only, on by default.
+> <br><br>Host only, on by default.
