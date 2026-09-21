@@ -165,6 +165,14 @@ to open by default).
 > <br><br>Host only, on by default.
 ---
 
+#### TailhookOnLandingGearFix
+> When enabled, instead of tail hook deciding on its own when to deploy based on speed, it simply ties its state to 
+> landing gear. If landing gear is retracting or retracted, tail hook retracts, and if landing gear is deploying or 
+> deployed, tail hook deploys. There's a small condition where if it's not deployed yet and you're on the ground, it 
+> won't deploy, this is so that when you initially spawn it won't come out (as the landing gear is already down then).
+> <br><br>Client only, on by default.
+---
+
 #### TargetDesignatorFix
 
 > Fixes Target Designator indicator on center of screen inconsistently showing depending on weapon selected, and not
