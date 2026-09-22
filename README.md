@@ -196,6 +196,13 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### UnableToTargetUnitFix
+> Fixes an issue where if a unit is neutral, and is spawned in (by e.g. mission objective trigger) during a time the 
+> client player wasn't spawned in, its combatHUD marker will never instantiate and thus targeting that unit will fail 
+> for the rest of that mission (targeting sound plays, but isn't actually targeted).
+> <br><br>Client only, on by default.
+---
+
 #### WarheadDesyncFix
 
 > Fixes warheads showing as available on clients when they're actually inaccessible due to how a warhead storage's 
