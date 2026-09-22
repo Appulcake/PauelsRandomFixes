@@ -203,6 +203,16 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### VehicleDepotFix
+> Fixes vehicle depots not belonging to a nearby in range airbase and thus not getting captured when that airbase does 
+> so, and properly attributes that depot to be the right faction's in its depot list (otherwise it'd start using 
+> stockpile of the previous faction despite spawning the new owner faction's vehicles).
+> <br>Also fixes an issue with vehicle depots not being removed from a faction's depot list when they no longer exist, 
+> as otherwise currently such a null depot entry causes FactionHQ.DeployUnits() to run into an NRE as when it calls 
+> SortDepots() there's no null check. That causes that faction's unit spawns to stop working.
+> <br><br>Server only, on by default.
+---
+
 #### WarheadDesyncFix
 
 > Fixes warheads showing as available on clients when they're actually inaccessible due to how a warhead storage's 
