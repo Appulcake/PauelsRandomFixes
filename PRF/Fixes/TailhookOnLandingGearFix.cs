@@ -32,11 +32,16 @@ internal class TailhookOnLandingGearFix(ConfigFile config) : ConfigurableFix(con
     private static void SetGearPostfix(Aircraft __instance, LandingGear.GearState gearState)
     {
         var deploy = GetDesiredState(__instance, gearState);
-        var tailHooks = __instance.GetAllParts()
-            .SelectMany(part => part.GetComponentsInChildren<TailHook>(true));
         
-        foreach (var tailHook in tailHooks)
-            UpdateTailHook(tailHook, __instance, deploy);
+        // No LINQ to save performance in lookup
+        foreach (var part in __instance.GetAllParts())
+        {
+            if (part == null)
+                continue;
+            
+            foreach (var tailHook in part.GetComponentsInChildren<TailHook>(true))
+                UpdateTailHook(tailHook, __instance, deploy);
+        }
     }
     
     private static bool GetDesiredState(Aircraft aircraft) => GetDesiredState(aircraft, aircraft.gearState);
