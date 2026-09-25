@@ -1,7 +1,7 @@
+#if CLIENT
 using BepInEx.Configuration;
 using HarmonyLib;
 
-#if CLIENT
 namespace PRF.Fixes;
 
 [Fix]
