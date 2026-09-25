@@ -35,6 +35,12 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### DesyncedAirbaseFactionBuildingsFix
+> Fixes client visual mismatch where some buildings in airbases can show as the wrong faction, e.g. when joining you 
+> see a bunch of hostile buildings in an otherwise friendly airbase.
+> <br><br>Client only, on by default
+---
+
 #### DisableVerticalCameraInCockpitFix
 
 > Prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical",
