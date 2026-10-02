@@ -21,8 +21,19 @@ internal class ThrottleInputFix : ConfigurableFix
     private static ConfigEntry<bool> _applyThrottleModesToCustomAxis = null!;
     private static ConfigEntry<float> _relativeCustomAxisSensitivity = null!;
     
+    private static ConfigEntry<bool> _relativeThrottleDetents = null!;
+    private static ConfigEntry<int> _relativeDetentHoldMilliseconds = null!;
+    
     private static ThrottleInputKind _lastThrottleInputKind;
     private static bool? _analogueIncrementalRelativeOverride;
+    
+    private const float DetentOffset = 0.0001f;
+    private static bool _hasAirbrakeDetent;
+    private static bool _hasAfterburnerDetent;
+    private static float _afterburnerDetent;
+    private static ThrottleDetent _activeDetent;
+    private static float _detentHoldStart;
+    private static bool _detentUnlocked;
     
     public ThrottleInputFix(ConfigFile config) : base(config)
     {
@@ -76,6 +87,14 @@ internal class ThrottleInputFix : ConfigurableFix
             "\"Axis Modifier\".\n\nDoes not change the directly bound \"Custom Axis 1\" input.");
         _relativeCustomAxisSensitivity = config.Bind(GetType().Name, "Relative Custom Axis Sensitivity", 1f,
             "Speed multiplier for relative throttle input while it's redirected to Custom Axis 1 with \"Axis Modifier\".");
+        
+        _relativeThrottleDetents = config.Bind(GetType().Name, "Relative Throttle Detent", false,
+            "Adds a detent when relative throttle is about to move into activating afterburner or airbrake, " +
+            "when supported by the current aircraft.");
+        _relativeDetentHoldMilliseconds = config.Bind(GetType().Name, "Relative Throttle Detent - Hold Time", 200,
+            new ConfigDescription("How long relative throttle has to be held at a detent before continued input crosses it.\n\n" +
+                                  "(Releasing then re-pressing input towards the detent immediately crosses it)",
+                new AcceptableValueRange<int>(0, 2000)));
     }
     
     protected override string Description =>
@@ -142,22 +161,47 @@ internal class ThrottleInputFix : ConfigurableFix
     // Reset last detected input source when entering new player state
     [HarmonyPatch(typeof(PilotPlayerState), nameof(PilotPlayerState.EnterState))]
     [HarmonyPrefix]
-    private static void EnterStatePrefix()
+    private static void EnterStatePrefix(Pilot pilot)
     {
         _lastThrottleInputKind = ThrottleInputKind.None;
+        ResetThrottleDetents();
+        
+        var hudExtras = pilot.aircraft.GetAircraftParameters().HUDExtras;
+        if (hudExtras == null)
+            return;
+        
+        var throttleGauge = hudExtras.GetComponentInChildren<ThrottleGauge>(true);
+        if (throttleGauge == null)
+            return;
+        
+        _hasAirbrakeDetent = throttleGauge.airbrake;
+        if (!throttleGauge.afterburner || throttleGauge.throttleRegions is not { Length: > 0 })
+            return;
+        
+        var boundary = throttleGauge.throttleRegions[throttleGauge.throttleRegions.Length - 1].GetStart();
+        if (!(boundary > DetentOffset) || !(boundary < 1f))
+            return;
+        
+        _hasAfterburnerDetent = true;
+        _afterburnerDetent = boundary;
     }
     
     private static void UpdateThrottle(ref float simulatedThrottle, float current, float previous, bool axisModifier,
         ThrottleInputKind inputKind)
     {
         if (axisModifier)
+        {
+            ResetThrottleDetentHold();
             return;
+        }
         
         if (ShouldUseRelativeHandling(inputKind))
         {
             ApplyRelativeThrottle(ref simulatedThrottle, current);
             return;
         }
+        
+        ResetThrottleDetentHold();
         
         if (!ShouldUseAbsoluteHandling(inputKind))
             return;
@@ -209,7 +253,12 @@ internal class ThrottleInputFix : ConfigurableFix
         if (!signedState)
             sensitivity *= 0.5f;
         
-        simulatedThrottle = ApplyRelativeInput(simulatedThrottle, input, sensitivity, signedState ? -1f : 0f, 1f);
+        var previousState = simulatedThrottle;
+        var requestedState = ApplyRelativeInput(simulatedThrottle, input, sensitivity, signedState ? -1f : 0f, 1f);
+        
+        ApplyRelativeThrottleDetents(ref requestedState, previousState, signedState);
+        
+        simulatedThrottle = requestedState;
     }
     
 #pragma warning disable Harmony003
@@ -319,6 +368,110 @@ internal class ThrottleInputFix : ConfigurableFix
             value += Mathf.Clamp(current - value, -Time.deltaTime, Time.deltaTime);
     }
     
+    private static void ApplyRelativeThrottleDetents(ref float requestedState, float previousState, bool signedState)
+    {
+        if (!_relativeThrottleDetents.Value || _relativeDetentHoldMilliseconds.Value <= 0)
+        {
+            ResetThrottleDetentHold();
+            return;
+        }
+        
+        var previous = ThrottleStateToOutput(previousState, signedState);
+        var requested = ThrottleStateToOutput(requestedState, signedState);
+        var increasing = requested > previous;
+        var decreasing = requested < previous;
+        
+        if (_activeDetent != ThrottleDetent.None)
+        {
+            var pushingIntoDetent = _activeDetent == ThrottleDetent.Afterburner ? increasing : decreasing;
+            var movingAwayFromDetent = _activeDetent == ThrottleDetent.Afterburner ? decreasing : increasing;
+            if (movingAwayFromDetent)
+            {
+                ResetThrottleDetentHold();
+                return;
+            }
+            
+            if (_detentUnlocked)
+            {
+                if (HasCrossedActiveDetent(requested))
+                    ResetThrottleDetentHold();
+                
+                return;
+            }
+            
+            if (!pushingIntoDetent)
+            {
+                _detentUnlocked = true;
+                return;
+            }
+            
+            var holdSeconds = _relativeDetentHoldMilliseconds.Value * 0.001f;
+            if (Time.time - _detentHoldStart < holdSeconds)
+            {
+                requestedState = OutputToThrottleState(GetDetentParkedThrottle(_activeDetent), signedState);
+                return;
+            }
+            
+            _detentUnlocked = true;
+            if (HasCrossedActiveDetent(requested))
+                ResetThrottleDetentHold();
+            
+            return;
+        }
+        
+        if (_hasAfterburnerDetent && increasing && previous < _afterburnerDetent && requested >= _afterburnerDetent)
+        {
+            requestedState = StartThrottleDetent(ThrottleDetent.Afterburner, signedState);
+            return;
+        }
+        
+        if (_hasAirbrakeDetent && decreasing && previous > 0f && requested <= 0f)
+            requestedState = StartThrottleDetent(ThrottleDetent.Airbrake, signedState);
+    }
+    
+    private static float GetDetentParkedThrottle(ThrottleDetent detent)
+    {
+        return detent switch
+        {
+            ThrottleDetent.Airbrake => DetentOffset,
+            ThrottleDetent.Afterburner => Mathf.Max(0f, _afterburnerDetent - DetentOffset),
+            _ => 0f
+        };
+    }
+    
+    private static float StartThrottleDetent(ThrottleDetent detent, bool signedState)
+    {
+        _activeDetent = detent;
+        _detentUnlocked = false;
+        _detentHoldStart = Time.time;
+        return OutputToThrottleState(GetDetentParkedThrottle(detent), signedState);
+    }
+    
+    private static void ResetThrottleDetents()
+    {
+        _hasAirbrakeDetent = false;
+        _hasAfterburnerDetent = false;
+        _afterburnerDetent = 1f;
+        ResetThrottleDetentHold();
+    }
+    
+    private static void ResetThrottleDetentHold()
+    {
+        _activeDetent = ThrottleDetent.None;
+        _detentUnlocked = false;
+        _detentHoldStart = 0f;
+    }
+    
+    private static bool HasCrossedActiveDetent(float throttle)
+    {
+        return _activeDetent switch
+        {
+            ThrottleDetent.Afterburner => throttle >= _afterburnerDetent,
+            ThrottleDetent.Airbrake => throttle <= 0f,
+            _ => true
+        };
+    }
+    
     private static float GetRelativeInput(float input)
     {
         if (_relativeInputMode.Value != RelativeInputMode.FullRate)
@@ -391,6 +544,12 @@ internal class ThrottleInputFix : ConfigurableFix
     private static float OutputToAbsoluteState(float output) =>
         PlayerSettings.throttleUseNegative ? output * 2f - 1f : output;
     
+    private static float ThrottleStateToOutput(float state, bool signedState) =>
+        signedState ? 0.5f * (state + 1f) : state;
+    
+    private static float OutputToThrottleState(float output, bool signedState) =>
+        signedState ? output * 2f - 1f : output;
+    
     private enum AbsoluteInputMode
     {
         Direct,
@@ -416,6 +575,13 @@ internal class ThrottleInputFix : ConfigurableFix
     {
         Relative,
         Absolute
+    }
+    
+    private enum ThrottleDetent
+    {
+        None,
+        Airbrake,
+        Afterburner
     }
 }
 #endif

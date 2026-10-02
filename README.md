@@ -35,6 +35,12 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### DesyncedAirbaseFactionBuildingsFix
+> Fixes client visual mismatch where some buildings in airbases can show as the wrong faction, e.g. when joining you 
+> see a bunch of hostile buildings in an otherwise friendly airbase.
+> <br><br>Client only, on by default
+---
+
 #### DisableVerticalCameraInCockpitFix
 
 > Prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical",
@@ -165,6 +171,14 @@ to open by default).
 > <br><br>Host only, on by default.
 ---
 
+#### TailhookOnLandingGearFix
+> When enabled, instead of tail hook deciding on its own when to deploy based on speed, it simply ties its state to 
+> landing gear. If landing gear is retracting or retracted, tail hook retracts, and if landing gear is deploying or 
+> deployed, tail hook deploys. There's a small condition where if it's not deployed yet and you're on the ground, it 
+> won't deploy, this is so that when you initially spawn it won't come out (as the landing gear is already down then).
+> <br><br>Client only, on by default.
+---
+
 #### TargetDesignatorFix
 
 > Fixes Target Designator indicator on center of screen inconsistently showing depending on weapon selected, and not
@@ -185,7 +199,29 @@ to open by default).
 > "stick" where you need to first increment it for a while before it comes out of this zone and starts going up from 0%.
 > <br><br>With relative mode disabled, if you use binds on "Increase Throttle" and "Decrease Throttle", those still act as 
 > relative incremental input automatically, following other relative throttle related settings in this fix.
+> <br><br>Includes a config "Relative Throttle Detent" (off by default) that when enabled prevent relative throttle movement 
+> from immediately moving into activating afterburner or airbrake, holding throttle until it's held sufficiently long 
+> (configurable duration). Releasing throttle input and pressing input towards a detent again immediately allows crossing 
+> it too. This helps relative input users (especially on binary input controls like KB/M) to set a throttle as low/high 
+> as possible but not quite activating airbrake/afterburner, without overshooting it.
 > <br><br>Client only, on by default.
+---
+
+#### UnableToTargetUnitFix
+> Fixes an issue where if a unit is neutral, and is spawned in (by e.g. mission objective trigger) during a time the 
+> client player wasn't spawned in, its combatHUD marker will never instantiate and thus targeting that unit will fail 
+> for the rest of that mission (targeting sound plays, but isn't actually targeted).
+> <br><br>Client only, on by default.
+---
+
+#### VehicleDepotFix
+> Fixes vehicle depots not belonging to a nearby in range airbase and thus not getting captured when that airbase does 
+> so, and properly attributes that depot to be the right faction's in its depot list (otherwise it'd start using 
+> stockpile of the previous faction despite spawning the new owner faction's vehicles).
+> <br>Also fixes an issue with vehicle depots not being removed from a faction's depot list when they no longer exist, 
+> as otherwise currently such a null depot entry causes FactionHQ.DeployUnits() to run into an NRE as when it calls 
+> SortDepots() there's no null check. That causes that faction's unit spawns to stop working.
+> <br><br>Server only, on by default.
 ---
 
 #### WarheadDesyncFix
