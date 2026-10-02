@@ -199,6 +199,11 @@ to open by default).
 > "stick" where you need to first increment it for a while before it comes out of this zone and starts going up from 0%.
 > <br><br>With relative mode disabled, if you use binds on "Increase Throttle" and "Decrease Throttle", those still act as 
 > relative incremental input automatically, following other relative throttle related settings in this fix.
+> <br><br>Includes a config "Relative Throttle Detent" (off by default) that when enabled prevent relative throttle movement 
+> from immediately moving into activating afterburner or airbrake, holding throttle until it's held sufficiently long 
+> (configurable duration). Releasing throttle input and pressing input towards a detent again immediately allows crossing 
+> it too. This helps relative input users (especially on binary input controls like KB/M) to set a throttle as low/high 
+> as possible but not quite activating airbrake/afterburner, without overshooting it.
 > <br><br>Client only, on by default.
 ---
 
