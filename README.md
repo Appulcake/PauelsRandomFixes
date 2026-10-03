@@ -178,7 +178,7 @@ to open by default).
 > returned (eNoServersListedOnMasterServer response), there'll be none in the list.<br><br>
 > This fix makes all filters act on the local list without sending queries every time, and when a refresh returns no 
 > entries, it just keeps showing the existing list it already had.
-> <br><br>Cleint only, on by default.
+> <br><br>Client only, on by default.
 ---
 
 #### TailhookOnLandingGearFix
