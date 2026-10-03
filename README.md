@@ -171,6 +171,16 @@ to open by default).
 > <br><br>Host only, on by default.
 ---
 
+#### ServerBrowserFix
+> Fixes dedicated servers disappearing from server browser list when steam returns no dedicated servers. This happens 
+> when the query gets rate limited, as every filter change (other than search by name) sends a new query for every 
+> single server, and the game also throws out the entire list on such a refresh so when no dedicated servers are 
+> returned (eNoServersListedOnMasterServer response), there'll be none in the list.<br><br>
+> This fix makes all filters act on the local list without sending queries every time, and when a refresh returns no 
+> entries, it just keeps showing the existing list it already had.
+> <br><br>Cleint only, on by default.
+---
+
 #### TailhookOnLandingGearFix
 > When enabled, instead of tail hook deciding on its own when to deploy based on speed, it simply ties its state to 
 > landing gear. If landing gear is retracting or retracted, tail hook retracts, and if landing gear is deploying or 
