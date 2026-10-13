@@ -77,6 +77,7 @@
         <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.AssetBundleModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.AudioModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.AudioModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.CoreModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.CoreModule.dll" Private="False" Publicize="True"/>
+        <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.InputLegacyModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.JSONSerializeModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.JSONSerializeModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.ParticleSystemModule.dll" Private="False" Publicize="True"/>
         <Reference Include="UnityEngine.PhysicsModule" HintPath="$(NUCLEAR_OPTION_SERVER_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="False" Publicize="True"/>
