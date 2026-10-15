@@ -49,6 +49,14 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### DismountedPilotCollisionFix
+
+> Disables dismounted pilot objects colliding with anything else other than terrain, so that you no longer get your 
+> plane disintegrated completely when driving/flying through one, as they're an unmovable object apparently (except 
+> your plane isn't an unstoppable force).
+> <br><br>Client (for players' own plane) and server (for AI), on by default.
+---
+
 #### ExplosionKillAttributionFix
 > Fixes/adds kill attribution from secondary explosion kills. For example, if player A kills an ammo
 > container, and then that container's explosion kills some nearby units, player A will get kill attribution (rewards 
