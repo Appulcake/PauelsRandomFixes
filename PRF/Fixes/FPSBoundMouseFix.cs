@@ -22,6 +22,9 @@ internal class FPSBoundMouseFix : ConfigurableFix
     private static ConfigEntry<float> _orbitCamSensitivity = null!;
     private static ConfigEntry<float> _orbitZoomSensitivity = null!;
     
+    private static ConfigEntry<bool> _useMouseForMap = null!;
+    private static ConfigEntry<bool> _disablePanTiltOnMap = null!;
+    
     // ReSharper disable once InconsistentNaming
     private static ConfigEntry<float> _TVCamSensitivity = null!;
     private static ConfigEntry<float> _virtualJoystickCenteringForce = null!;
@@ -36,9 +39,18 @@ internal class FPSBoundMouseFix : ConfigurableFix
     
     public FPSBoundMouseFix(ConfigFile config) : base(config)
     {
+        
         _enableCenteringDuringFreelook = config.Bind(GetType().Name + " - Misc", "Enable Centering VJ During Freelook",
             false,
             "Enable centering force to act on Virtual Joystick while freelook is active (instead of freezing last input)");
+
+        _useMouseForMap = config.Bind(GetType().Name + " - Misc", "Pixel-perfect mouse on map",
+            true,
+            "This enables a direct Pixel Perfect mode for map panning. Interferes with the default implementation, for most use cases, you never want to have this be different from disable pan/tilt");
+
+        _disablePanTiltOnMap = config.Bind(GetType().Name + " - Misc", "Disable Pan/Tilt binds for map panning",
+            true,
+            "If you want to enable this and pixel-perfect together, you MUST change the default tilt view/pan view binds in the game's input menu so they don't also use the mouse.\nYou'll also need to change the map pan sensitivity if you change this.");
         
         _cockpitFreelookSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Cockpit Freelook Sensitivity", 1f,
             "Cockpit freelook sensitivity");
@@ -67,6 +79,9 @@ internal class FPSBoundMouseFix : ConfigurableFix
     
     private static float GetCockpitFreelookSensitivity() => _cockpitFreelookSensitivity.Value * 0.5f;
     
+    public static float GetMapPanSensitivityForDefaultImpl() =>
+        _mapPanSensitivity.Value * 41.6665f * (_disablePanTiltOnMap.Value?0f:1f); // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
+    
     public static float GetOrbitCamSensitivity() => _orbitCamSensitivity.Value * 0.5f;
     public static float GetOrbitZoomSensitivity() => _orbitZoomSensitivity.Value;
     public static float GetTVCamSensitivity() => _TVCamSensitivity.Value * 0.01f;
@@ -82,6 +97,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     // ReSharper disable once InconsistentNaming
     private static void ExactMapDrag(DynamicMap __instance)
     {
+        if (!_useMouseForMap.Value)return;
+
         if (!Input.GetMouseButton(0))
         {
             _mapDragActive = false;
@@ -95,6 +112,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
         if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
             eventCamera = canvas.worldCamera;
         
+        
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(backgroundRect,
                 Input.mousePosition, eventCamera, out var pointerLocal))
         {
@@ -105,6 +123,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
         
         if (!_mapDragActive || Input.GetMouseButtonDown(0) || _lastMapDragFrame != Time.frameCount - 1)
         {
+            // Executed only on the first frame of movement.
             _mapDragActive = true;
             _lastMapPointerLocal = pointerLocal;
             _lastMapDragFrame = Time.frameCount;
@@ -112,6 +131,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
         }
         
         var pointerDelta = pointerLocal - _lastMapPointerLocal;
+        
         _lastMapPointerLocal = pointerLocal;
         _lastMapDragFrame = Time.frameCount;
         var mapScale = __instance.mapImage.transform.localScale.x;
@@ -150,8 +170,23 @@ internal class FPSBoundMouseFix : ConfigurableFix
             if (!matcher.IsValid)
                 break;
             
-            // Replaced by ExactMapDrag(), don't enact any movement here on vanilla click + drag movement
-            matcher.Set(OpCodes.Ldc_R4, 0f);
+            // Old functionality can remain here, map movement can be done via "Move Map Horizontal/Vertical", which is
+            // not bound to mouse by default and would be very unorthodox to do so (it'd make map move on any mouse movement)
+            // So we can leave this as is, where it's treated as absolute input only, getting its deltaTime multiplication
+            // And then the second method is in the Input.GetMouseButton(0) block, which is only active while holding LMB,
+            // similarly here it'd be highly unorthodox to rebind gamepad bind for this, so we can just treat this as relative
+            // only and retain the simple transpiler removing the excess deltaTime multiplication
+            //
+            // So this stays at the fixed calibrated 25 * Min(1, 0.03), while that could be further replaced to be
+            // 25 * 0.03 or even 0.75 at default calibration and be adjusted by config, this keeps it less invasive and
+            // easier to see where it's coming from in original code
+            
+            // 150 => GetMapPanSensitivity which is _mapPanSensitivity * 25 so 25f by default
+            // Update during rewrite: Found that 20.875f is a more accurate 1:1 calibration as default for 1.0 config
+            // MapPanSensitivity is set to 0 if vanilla panning is disabled, therefore, this has correct behaviour.
+            matcher.SetAndAdvance(OpCodes.Call, ReusedRefs.MapPanSensitivity);
+            // unscaledDeltaTime => 1f, this is in a Mathf.Min function
+            matcher.SetAndAdvance(OpCodes.Ldc_R4, 1f);
             
             patched++;
         }
@@ -630,6 +665,9 @@ internal class FPSBoundMouseFix : ConfigurableFix
             AccessTools.Method(
                 typeof(FPSBoundMouseFix), nameof(GetAxisRelative),
                 [typeof(Player), typeof(string), typeof(float), typeof(float)]);
+        
+        internal static MethodInfo MapPanSensitivity { get; }
+            = AccessTools.Method(typeof(FPSBoundMouseFix), nameof(GetMapPanSensitivityForDefaultImpl));
         
         internal static MethodInfo CockpitFreelookSensitivity { get; }
             = AccessTools.Method(typeof(FPSBoundMouseFix), nameof(GetCockpitFreelookSensitivity));
