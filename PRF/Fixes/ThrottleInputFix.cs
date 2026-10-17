@@ -111,6 +111,8 @@ internal class ThrottleInputFix : ConfigurableFix
         // ReSharper disable once UseVerbatimString
         "increment it for a while before it comes out of this zone and starts going up from 0%.";
     
+    protected override bool DefaultEnabled => false;
+    
     private static AnalogueIncrementalInputMode GetAnalogueIncrementalInputMode()
     {
         if (!_analogueIncrementalRelativeOverride.HasValue)

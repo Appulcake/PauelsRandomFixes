@@ -15,6 +15,8 @@ internal class TailhookOnLandingGearFix(ConfigFile config) : ConfigurableFix(con
         $"{base.Description}\nTies tail hook state to landing gear, when you deploy gear tail hook also deploys, and " +
         "when retracting gear it also retracts.";
     
+    protected override bool DefaultEnabled => false;
+    
     [HarmonyPatch(typeof(TailHook), nameof(TailHook.CheckDeployConditions))]
     [HarmonyPrefix]
     // ReSharper disable once InconsistentNaming
