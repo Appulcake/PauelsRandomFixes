@@ -189,11 +189,13 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### TailhookOnLandingGearFix
-> When enabled, instead of tail hook deciding on its own when to deploy based on speed, it simply ties its state to 
-> landing gear. If landing gear is retracting or retracted, tail hook retracts, and if landing gear is deploying or 
-> deployed, tail hook deploys. There's a small condition where if it's not deployed yet and you're on the ground, it 
-> won't deploy, this is so that when you initially spawn it won't come out (as the landing gear is already down then).
+#### TailHookGuidanceFix
+> When enabled, displays guidance when a tail hook is equipped and landing gear is extended (while not on ground) to 
+> show info on what conditions aren't met to deploy tail hook and what to do to meet them, as vanilla's criteria can 
+> be a bit confusing, leaving one to wonder why it didn't deploy. The guidance messages are sticky always bottom in 
+> the reports window.<br><br>(Vanilla's criteria to deploy are between 30m and 120m radar altitude, below 100m/s | 
+> 360km/h, and while descending/negative vertical speed - the above 30m and while descending parts are easily 
+> overlooked causing confusion. Criteria for retracting once extended is strictly speed, altitude no longer matters.)
 > <br><br>Client only, on by default.
 ---
 
@@ -221,7 +223,14 @@ to open by default).
 > from immediately moving into activating afterburner or airbrake, holding throttle until it's held sufficiently long 
 > (configurable duration). Releasing throttle input and pressing input towards a detent again immediately allows crossing 
 > it too. This helps relative input users (especially on binary input controls like KB/M) to set a throttle as low/high 
-> as possible but not quite activating airbrake/afterburner, without overshooting it.
+> as possible but not quite activating airbrake/afterburner, without overshooting it.<br><br>
+> Relative throttle's sensitivity can be configured, the default 1.0 equals vanilla speed. This also includes vanilla's 
+> quirky behaviour where it speeds up depending on use throttle axis negative region being enabled or not, as vanilla's 
+> throttle traversal rate is 1 unit per second, so without negative region 0-1 (0 to 100%) takes 1s, but with negative 
+> region in use it remaps -1 to 1 to 0-1 halving traversal rate to 0.5/s so 0-1 (0 to 100%) now takes 2s. This behaviour 
+> is kept here for consistency, so default speed matches vanilla and toggling vanilla's negative region off doubles 
+> traversal speed (but without reintroducing the annoying part where relative throttle can enter this negative region 
+> and get stuck there).
 > <br><br>Client only, on by default.
 ---
 

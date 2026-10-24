@@ -75,7 +75,11 @@ internal class ThrottleInputFix : ConfigurableFix
             "adjustment speed.");
         
         _relativeSensitivity = config.Bind(GetType().Name, "Relative Sensitivity", 1f,
-            "Overall speed multiplier for relative throttle movement.");
+            "Overall speed multiplier for relative throttle movement. 1.0 matches vanilla speed. " +
+            "Also keeps vanilla behaviour where \"Use Throttle Axis Negative Region\" being turned off doubles the " +
+            "relative throttle traversal rate, so on 1.0 on default vanilla settings (negative region on) it takes 2s " +
+            "to go from 0 to 100%, while with negative region off it takes 1s. (But without introducing throttle " +
+            "being able to enter into the negative region and thus getting \"stuck\" like in vanilla)");
         _relativeDeadzone = config.Bind(GetType().Name, "Relative Deadzone", 0.1f,
             new ConfigDescription(
                 "Minimum input required in Full Rate mode before relative throttle starts moving. "
@@ -110,8 +114,6 @@ internal class ThrottleInputFix : ConfigurableFix
         "Also fixes relative throttle going into negative range, causing it to \"stick\" where you need to first " +
         // ReSharper disable once UseVerbatimString
         "increment it for a while before it comes out of this zone and starts going up from 0%.";
-    
-    protected override bool DefaultEnabled => false;
     
     private static AnalogueIncrementalInputMode GetAnalogueIncrementalInputMode()
     {
@@ -246,20 +248,11 @@ internal class ThrottleInputFix : ConfigurableFix
     private static void ApplyRelativeThrottle(ref float simulatedThrottle, float input)
     {
         var signedState = PlayerSettings.throttleUseRelative || PlayerSettings.throttleUseNegative;
-        var sensitivity = GetRelativeSensitivity();
-        
-        // -1-1 has twice the travel of 0-1, with negative region or relative throttle we get -1-1 range instead of 0-1
-        // This allows keeping the -1-1 range everywhere else including for relative throttle, and only reduce it to
-        // 0-1 throttle setting when applying it at the end, accounting for different rate of change with -1-1 vs 0-1 input
-        
-        if (!signedState)
-            sensitivity *= 0.5f;
-        
+        var sensitivity = GetRelativeSensitivity(signedState);
         var previousState = simulatedThrottle;
         var requestedState = ApplyRelativeInput(simulatedThrottle, input, sensitivity, signedState ? -1f : 0f, 1f);
         
         ApplyRelativeThrottleDetents(ref requestedState, previousState, signedState);
-        
         simulatedThrottle = requestedState;
     }
     
@@ -489,6 +482,14 @@ internal class ThrottleInputFix : ConfigurableFix
         return Mathf.Clamp01(value);
     }
 #pragma warning restore Harmony003
+    
+    private static float GetRelativeSensitivity(bool signedState)
+    {
+        // Vanilla moves 1 unit per second (so without negative region, 0-1 or 0 to 100% takes 1s, while with negative
+        // region it remaps this -1 to 1 to 0-1 in terms of traversal speed so takes 2s to go from 0 to 100%)
+        var outputRate = _relativeSensitivity.Value * (PlayerSettings.throttleUseNegative ? 0.5f : 1f);
+        return signedState ? outputRate * 2f : outputRate;
+    }
     
     private static ThrottleInputKind GetThrottleInputKind(Player inputPlayer)
     {
