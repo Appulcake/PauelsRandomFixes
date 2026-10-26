@@ -259,5 +259,10 @@ to open by default).
 > stripped upon spawn.
 > The fix works by preventing nukes from being able to be placed in disabled warhead storages to begin with, so they're 
 > not put in inaccessible places (where not only would clients erroneously see them as accessible, they'd be unusable 
-> regardless). Those warheads are instead redistributed to the next valid, accessible storage nearby.
+> regardless). Those warheads are instead redistributed to the next valid, accessible storage nearby.<br><br>
+> Also de-prioritises putting warheads into airbases that don't have at least one funtional non-helipad hangar, 
+> otherwise an airbase with valid warhead storage can still receive nukes which'll be inaccessible (as you either 
+> can't spawn at them at all, or only as helicopter). If no such better airbase target exists at all, it falls back to 
+> being able to place them at such bases (so the nuke doesn't just disappear). This also doesn't apply to intentional 
+> player ferried warheads, only to freshly produced ones.
 > <br><br>Host only, on by default.
