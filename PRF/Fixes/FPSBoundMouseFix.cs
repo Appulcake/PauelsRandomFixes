@@ -18,6 +18,7 @@ internal class FPSBoundMouseFix : ConfigurableFix
 {
     private static ConfigEntry<bool> _enableCenteringDuringFreelook = null!;
     private static ConfigEntry<float> _cockpitFreelookSensitivity = null!;
+    private static ConfigEntry<float> _cockpitFreelookZoomScaling = null!;
     private static ConfigEntry<float> _mapPanSensitivity = null!;
     private static ConfigEntry<float> _orbitCamSensitivity = null!;
     private static ConfigEntry<float> _orbitZoomSensitivity = null!;
@@ -39,21 +40,26 @@ internal class FPSBoundMouseFix : ConfigurableFix
     
     public FPSBoundMouseFix(ConfigFile config) : base(config)
     {
-        
         _enableCenteringDuringFreelook = config.Bind(GetType().Name + " - Misc", "Enable Centering VJ During Freelook",
             false,
             "Enable centering force to act on Virtual Joystick while freelook is active (instead of freezing last input)");
-
+        
         _useMouseForMap = config.Bind(GetType().Name + " - Misc", "Pixel-perfect mouse on map",
             true,
             "This enables a direct Pixel Perfect mode for map panning. Interferes with the default implementation, for most use cases, you never want to have this be different from disable pan/tilt");
-
+        
         _disablePanTiltOnMap = config.Bind(GetType().Name + " - Misc", "Disable Pan/Tilt binds for map panning",
             true,
             "If you want to enable this and pixel-perfect together, you MUST change the default tilt view/pan view binds in the game's input menu so they don't also use the mouse.\nYou'll also need to change the map pan sensitivity if you change this.");
         
         _cockpitFreelookSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Cockpit Freelook Sensitivity", 1f,
             "Cockpit freelook sensitivity");
+        _cockpitFreelookZoomScaling = config.Bind(GetType().Name + " - Sensitivity", "Cockpit Freelook Zoom Scaling",
+            0f, "Reduce cockpit freelook sensitivity when zoomed in (for both mouse and controller). " +
+                "1 means proportional to visual zoom level, <1 is slower, >1 is faster scaling, 0 disables this (so like " +
+                "vanilla).\n\nIf you enable this (try 1.0 first), you get rid of free look sensitivity being way too " +
+                "fast when zoomed in a lot, and instead zooming in more = slower sens, similar to many FPS games when " +
+                "using a scope on a weapon.");
         _mapPanSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Map Panning Sensitivity", 1f,
             "Map panning sensitivity");
         _orbitCamSensitivity = config.Bind(GetType().Name + " - Sensitivity", "Orbit Cam Sensitivity", 1f,
@@ -80,7 +86,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     private static float GetCockpitFreelookSensitivity() => _cockpitFreelookSensitivity.Value * 0.5f;
     
     public static float GetMapPanSensitivityForDefaultImpl() =>
-        _mapPanSensitivity.Value * 41.6665f * (_disablePanTiltOnMap.Value?0f:1f); // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
+        _mapPanSensitivity.Value * 41.6665f *
+        (_disablePanTiltOnMap.Value ? 0f : 1f); // Aimed to calibrate so 1.0 config = 1:1 map:mouse pixel movement
     
     public static float GetOrbitCamSensitivity() => _orbitCamSensitivity.Value * 0.5f;
     public static float GetOrbitZoomSensitivity() => _orbitZoomSensitivity.Value;
@@ -97,8 +104,8 @@ internal class FPSBoundMouseFix : ConfigurableFix
     // ReSharper disable once InconsistentNaming
     private static void ExactMapDrag(DynamicMap __instance)
     {
-        if (!_useMouseForMap.Value)return;
-
+        if (!_useMouseForMap.Value) return;
+        
         if (!Input.GetMouseButton(0))
         {
             _mapDragActive = false;
@@ -233,16 +240,16 @@ internal class FPSBoundMouseFix : ConfigurableFix
             var absoluteMult = matcher.Instruction.operand;
             
             // Then roll back and expand the stack from Rewired.Player + "Action Name" to follow with:
-            // Absolute mult + Custom freelook sens config + GetAxisRelative call
+            // Absolute mult + Custom freelook sens config + cockpit specific (scaled by zoom) GetAxisRelative call
             // then keep existing PlayerSettings.viewSensitivity + mul
             // and finally replace * unscaledDeltaTime with * 1f as it's not necessary
             // For a resulting call of e.g.:
-            // GetAxisRelative(GameManager.playerInput, "Pan View", 120f, GetCockpitFreelookSensitivity())
+            // GetCockpitAxisRelative(GameManager.playerInput, "Pan View", 120f, GetCockpitFreelookSensitivity())
             
             matcher.Advance(-1);
             matcher.SetAndAdvance(OpCodes.Ldc_R4, absoluteMult);
             matcher.SetAndAdvance(OpCodes.Call, ReusedRefs.CockpitFreelookSensitivity);
-            matcher.SetAndAdvance(OpCodes.Call, ReusedRefs.AxisRelative);
+            matcher.SetAndAdvance(OpCodes.Call, ReusedRefs.CockpitAxisRelative);
             matcher.Advance(2);
             matcher.SetAndAdvance(OpCodes.Ldc_R4, 1f);
             
@@ -613,12 +620,12 @@ internal class FPSBoundMouseFix : ConfigurableFix
     private static float GetAxisRelative(Player player, string actionName, float absoluteToRelMult,
         float relativeToRelMult)
     {
-        var value = player.GetAxis(actionName);
+        var axisValue = player.GetAxis(actionName);
         
         if (player.GetAxisCoordinateMode(actionName) == AxisCoordinateMode.Absolute)
-            return value * Time.unscaledDeltaTime * absoluteToRelMult;
+            return axisValue * Time.unscaledDeltaTime * absoluteToRelMult;
         
-        return value * relativeToRelMult;
+        return axisValue * relativeToRelMult;
     }
     
     private static float GetAxisRelativeClamped(Player player, string actionName, float absoluteToRelMult,
@@ -630,6 +637,27 @@ internal class FPSBoundMouseFix : ConfigurableFix
             return value * Mathf.Min(Time.unscaledDeltaTime, maxAbsoluteDeltaTime) * absoluteToRelMult;
         
         return value * relativeToRelMult;
+    }
+    
+    private static float GetCockpitAxisRelative(Player player, string actionName, float absoluteToRelMult,
+        float relativeToRelMult)
+    {
+        var axisValue = GetAxisRelative(player, actionName, absoluteToRelMult, relativeToRelMult);
+        var scalingStrength = _cockpitFreelookZoomScaling.Value;
+        if (axisValue == 0f || scalingStrength <= 0f)
+            return axisValue;
+        
+        var cam = SceneSingleton<CameraStateManager>.i;
+        if (cam == null || cam.mainCamera == null)
+            return axisValue;
+        
+        var baseFov = Mathf.Clamp(PlayerSettings.defaultFoV, 1f, 179f);
+        var currentFov = Mathf.Clamp(cam.mainCamera.fieldOfView, 1f, baseFov);
+        if (currentFov >= baseFov)
+            return axisValue;
+        
+        var ratio = Mathf.Tan(currentFov * (0.5f * Mathf.Deg2Rad)) / Mathf.Tan(baseFov * (0.5f * Mathf.Deg2Rad));
+        return axisValue * Mathf.Pow(ratio, scalingStrength);
     }
     
     private static class ReusedRefs
@@ -664,6 +692,11 @@ internal class FPSBoundMouseFix : ConfigurableFix
         internal static MethodInfo AxisRelative { get; } =
             AccessTools.Method(
                 typeof(FPSBoundMouseFix), nameof(GetAxisRelative),
+                [typeof(Player), typeof(string), typeof(float), typeof(float)]);
+        
+        internal static MethodInfo CockpitAxisRelative { get; } =
+            AccessTools.Method(
+                typeof(FPSBoundMouseFix), nameof(GetCockpitAxisRelative),
                 [typeof(Player), typeof(string), typeof(float), typeof(float)]);
         
         internal static MethodInfo MapPanSensitivity { get; }
