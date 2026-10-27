@@ -35,12 +35,6 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
-#### DesyncedAirbaseFactionBuildingsFix
-> Fixes client visual mismatch where some buildings in airbases can show as the wrong faction, e.g. when joining you 
-> see a bunch of hostile buildings in an otherwise friendly airbase.
-> <br><br>Client only, on by default
----
-
 #### DisableVerticalCameraInCockpitFix
 
 > Prevents cockpit camera from moving vertically with vertical camera movement keys ("Move Vertical",
@@ -164,6 +158,13 @@ to open by default).
 > <br><br>Client only, off by default.
 ---
 
+#### MountedWeaponDuplicateLaunchRpcFix
+> Prevents player mounted missiles/cargo from sending their fired RPC message twice on server, which causes other 
+> observers to expend two mounts for one launch (duplicate ammo reduction and also visual mounts that disappear off 
+> the plane).
+> <br><br>Host only, on by default.
+---
+
 #### RemoveTagsInTTS
 
 > Prevents TTS from reading out HTML tags in messages.
@@ -183,16 +184,6 @@ to open by default).
 > deploying e.g. an ammo container or truck, if those resupply a unit's ammo directly the player who deployed it gets 
 > rewarded, but relayed rearm from another truck picking up ammo from it then rearming others is still not attributed.
 > <br><br>Host only, on by default.
----
-
-#### ServerBrowserFix
-> Fixes dedicated servers disappearing from server browser list when steam returns no dedicated servers. This happens 
-> when the query gets rate limited, as every filter change (other than search by name) sends a new query for every 
-> single server, and the game also throws out the entire list on such a refresh so when no dedicated servers are 
-> returned (eNoServersListedOnMasterServer response), there'll be none in the list.<br><br>
-> This fix makes all filters act on the local list without sending queries every time, and when a refresh returns no 
-> entries, it just keeps showing the existing list it already had.
-> <br><br>Client only, on by default.
 ---
 
 #### TailHookGuidanceFix
@@ -254,7 +245,7 @@ to open by default).
 > <br>Also fixes an issue with vehicle depots not being removed from a faction's depot list when they no longer exist, 
 > as otherwise currently such a null depot entry causes FactionHQ.DeployUnits() to run into an NRE as when it calls 
 > SortDepots() there's no null check. That causes that faction's unit spawns to stop working.
-> <br><br>Server only, on by default.
+> <br><br>Host only, on by default.
 ---
 
 #### WarheadDesyncFix
