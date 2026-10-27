@@ -78,7 +78,13 @@ to open by default).
 > Joystick. These stack with vanilla game settings, and allow for additional fine control.<br>
 > Also includes an option to allow Centering Force to keep acting on
 > Virtual Joystick when using Free Look (normally in vanilla, when holding Free Look your last Virtual Joystick state is
-> frozen).
+> frozen).<br><br>
+> Free look includes an opt-in config "Cockpit Freelook Zoom Scaling" (affects both gamepad and mouse input when 
+> controlling free look in cockpit camera) that allows you to scale free look sensitivity based on zoom level. Your 
+> player setting default zoom level or further out is unchanged, but if you start zooming in, if you enable this config 
+> your sensitivity is proportionately reduced to account for zoom. This is similar to how most FPS games handle scopes, 
+> and prevents vanilla's way too high sensitivity when very zoomed in. Set to 0 = disabled (so like vanilla), 1 = 
+> proportional scaling (2x more zoomed in = 2x lower sens), <1 is less and >1 is more effect based on zoom level. 
 > <br><br>Client only, on by default.
 ---
 
