@@ -196,6 +196,11 @@ to open by default).
 > <br><br>Client only, on by default.
 ---
 
+#### TargetCamZoomFix
+> Prevents the target camera from zooming out while the map is maximised, and allows adjusting its zoom in speed.
+> <br><br>Client only, on by default.
+---
+
 #### TargetDesignatorFix
 
 > Fixes Target Designator indicator on center of screen inconsistently showing depending on weapon selected, and not
