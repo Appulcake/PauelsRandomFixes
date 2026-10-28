@@ -158,13 +158,6 @@ to open by default).
 > <br><br>Client only, off by default.
 ---
 
-#### MountedWeaponDuplicateLaunchRpcFix
-> Prevents player mounted missiles/cargo from sending their fired RPC message twice on server, which causes other 
-> observers to expend two mounts for one launch (duplicate ammo reduction and also visual mounts that disappear off 
-> the plane).
-> <br><br>Host only, on by default.
----
-
 #### RemoveTagsInTTS
 
 > Prevents TTS from reading out HTML tags in messages.
